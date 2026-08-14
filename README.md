@@ -4,9 +4,18 @@ A web-based browser for [STAC](https://stacspec.org/) APIs, built around
 Lantmäteriet's Swedish geodata catalogs: search items on a map, select the areas
 you want, and download the assets.
 
-Implementation is tracked in [`plan.md`](./plan.md). **Phase 0 (foundation) is
-complete** — the app shell boots with both routes; search, map and download
-arrive in later phases.
+Implementation is tracked in [`plan.md`](./plan.md). **Phases 0–1 are complete** —
+the app shell boots with both routes, and the STAC client is typed and tested.
+The map, search and download UI arrive in later phases.
+
+## Testing against real payloads
+
+`src/services/__fixtures__/` holds responses recorded from
+`api.lantmateriet.se/stac-bild/v1` — including the full 731-collection listing
+and consecutive search pages. The client's tests run against those rather than
+hand-written mocks, so they catch real-world quirks: `numberMatched` arriving as
+`null`, and paging links that switch between GET (token in the query string) and
+POST (token in a body). Re-record them with `curl` if the API changes.
 
 ## Requirements
 
@@ -23,7 +32,7 @@ npm run dev
 ## Scripts
 
 | Script                 | Purpose                                           |
-| ---------------------- | ------------------------------------------------- |
+|------------------------|---------------------------------------------------|
 | `npm run dev`          | Vite dev server                                   |
 | `npm run build`        | Typecheck, then production build to `dist/`       |
 | `npm run preview`      | Serve the production build on port 4173           |
