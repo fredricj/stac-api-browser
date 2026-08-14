@@ -1,0 +1,31 @@
+{
+  "app": {
+    "title": "STAC API-läsare",
+    "tagline": "Utforska, sök och ladda ner från SpatioTemporal Asset Catalog-API:er",
+    "skipToContent": "Hoppa till innehållet"
+  },
+  "nav": {
+    "home": "Kataloger",
+    "language": "Språk",
+    "backToCatalogs": "Tillbaka till katalogerna"
+  },
+  "home": {
+    "heading": "STAC-kataloger",
+    "intro": "Välj en katalog för att söka bland dess objekt på en karta och ladda ner de filer du behöver.",
+    "collections": "samlingar",
+    "addCustom": "Lägg till katalog",
+    "unreachable": "Kan inte nås"
+  },
+  "browser": {
+    "heading": "Utforska {name}",
+    "notFound": "Okänd katalog ”{id}”.",
+    "notFoundHint": "Den kan ha tagits bort, eller så är länken felstavad."
+  },
+  "common": {
+    "loading": "Laddar…",
+    "retry": "Försök igen",
+    "cancel": "Avbryt",
+    "close": "Stäng",
+    "comingSoon": "Kommer snart"
+  }
+}

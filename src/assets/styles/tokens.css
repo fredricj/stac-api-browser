@@ -1,0 +1,138 @@
+/*
+ * Design tokens.
+ *
+ * Light is the base palette on bare :root. Dark only redefines the token
+ * values, so every component can reference a single name and stay
+ * theme-agnostic. Nothing outside this file should hardcode a colour.
+ */
+
+:root {
+  /* Neutrals — surfaces from back to front */
+  --c-bg: #f7f8fa;
+  --c-surface: #ffffff;
+  --c-surface-2: #f1f3f6;
+  --c-surface-hover: #e9ecf1;
+  --c-border: #dfe3ea;
+  --c-border-strong: #c3cad6;
+
+  /* Text */
+  --c-text: #1b2330;
+  --c-text-muted: #5c6878;
+  --c-text-faint: #8a94a3;
+  --c-text-inverse: #ffffff;
+
+  /* Brand / interactive */
+  --c-accent: #1b6ef3;
+  --c-accent-hover: #1559cc;
+  --c-accent-bg: rgba(27, 110, 243, 0.1);
+  --c-accent-border: rgba(27, 110, 243, 0.45);
+  --c-focus: #1b6ef3;
+
+  /* Status */
+  --c-success: #15803d;
+  --c-success-bg: rgba(21, 128, 61, 0.12);
+  --c-warning: #b45309;
+  --c-warning-bg: rgba(180, 83, 9, 0.12);
+  --c-danger: #b91c1c;
+  --c-danger-bg: rgba(185, 28, 28, 0.12);
+
+  /* Map — footprint states. Kept as tokens so the map reads as part of
+     the same system and stays legible on either basemap. */
+  --c-footprint-fill: rgba(27, 110, 243, 0.16);
+  --c-footprint-line: rgba(27, 110, 243, 0.75);
+  --c-footprint-hover-fill: rgba(27, 110, 243, 0.32);
+  --c-selected-fill: rgba(21, 128, 61, 0.35);
+  --c-selected-line: #15803d;
+  --c-bbox-fill: rgba(180, 83, 9, 0.12);
+  --c-bbox-line: #b45309;
+
+  /* Typography */
+  --font-sans:
+    system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+  --font-mono: ui-monospace, 'Cascadia Code', Consolas, monospace;
+
+  --fs-xs: 0.75rem;
+  --fs-sm: 0.875rem;
+  --fs-base: 1rem;
+  --fs-lg: 1.125rem;
+  --fs-xl: 1.375rem;
+  --fs-2xl: 1.75rem;
+  --fs-3xl: 2.25rem;
+
+  --lh-tight: 1.2;
+  --lh-normal: 1.5;
+
+  /* Spacing — 4px scale */
+  --sp-1: 0.25rem;
+  --sp-2: 0.5rem;
+  --sp-3: 0.75rem;
+  --sp-4: 1rem;
+  --sp-5: 1.5rem;
+  --sp-6: 2rem;
+  --sp-7: 3rem;
+
+  /* Radii */
+  --r-sm: 4px;
+  --r-md: 8px;
+  --r-lg: 12px;
+  --r-full: 999px;
+
+  /* Elevation */
+  --shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.06);
+  --shadow-md:
+    0 4px 6px -2px rgba(16, 24, 40, 0.05),
+    0 12px 16px -4px rgba(16, 24, 40, 0.1);
+  --shadow-lg:
+    0 8px 8px -4px rgba(16, 24, 40, 0.04),
+    0 20px 24px -4px rgba(16, 24, 40, 0.12);
+
+  /* Layout */
+  --header-h: 3.5rem;
+  --sidebar-w: 22rem;
+  --content-max: 76rem;
+
+  --transition: 150ms ease;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --c-bg: #0f1319;
+    --c-surface: #171c24;
+    --c-surface-2: #1e242e;
+    --c-surface-hover: #262d39;
+    --c-border: #2b323d;
+    --c-border-strong: #3d4552;
+
+    --c-text: #e6eaf0;
+    --c-text-muted: #a0aab8;
+    --c-text-faint: #6f7a89;
+    --c-text-inverse: #0f1319;
+
+    --c-accent: #5b9bff;
+    --c-accent-hover: #7db0ff;
+    --c-accent-bg: rgba(91, 155, 255, 0.14);
+    --c-accent-border: rgba(91, 155, 255, 0.5);
+    --c-focus: #5b9bff;
+
+    --c-success: #4ade80;
+    --c-success-bg: rgba(74, 222, 128, 0.14);
+    --c-warning: #fbbf24;
+    --c-warning-bg: rgba(251, 191, 36, 0.14);
+    --c-danger: #f87171;
+    --c-danger-bg: rgba(248, 113, 113, 0.14);
+
+    --c-footprint-fill: rgba(91, 155, 255, 0.18);
+    --c-footprint-line: rgba(91, 155, 255, 0.8);
+    --c-footprint-hover-fill: rgba(91, 155, 255, 0.35);
+    --c-selected-fill: rgba(74, 222, 128, 0.35);
+    --c-selected-line: #4ade80;
+    --c-bbox-fill: rgba(251, 191, 36, 0.14);
+    --c-bbox-line: #fbbf24;
+
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --shadow-md:
+      0 4px 6px -2px rgba(0, 0, 0, 0.35), 0 12px 16px -4px rgba(0, 0, 0, 0.45);
+    --shadow-lg:
+      0 8px 8px -4px rgba(0, 0, 0, 0.3), 0 20px 24px -4px rgba(0, 0, 0, 0.5);
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "app": {
+    "title": "STAC API Browser",
+    "tagline": "Browse, search and download from SpatioTemporal Asset Catalog APIs",
+    "skipToContent": "Skip to main content"
+  },
+  "nav": {
+    "home": "Catalogs",
+    "language": "Language",
+    "backToCatalogs": "Back to catalogs"
+  },
+  "home": {
+    "heading": "STAC catalogs",
+    "intro": "Pick a catalog to search its items on a map and download the assets you need.",
+    "collections": "collections",
+    "addCustom": "Add a catalog",
+    "unreachable": "Unreachable"
+  },
+  "browser": {
+    "heading": "Browse {name}",
+    "notFound": "Unknown catalog \"{id}\".",
+    "notFoundHint": "It may have been removed, or the link may be mistyped."
+  },
+  "common": {
+    "loading": "Loading…",
+    "retry": "Retry",
+    "cancel": "Cancel",
+    "close": "Close",
+    "comingSoon": "Coming soon"
+  }
+}

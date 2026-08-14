@@ -1,0 +1,11 @@
+dist
+dist-ssr
+coverage
+node_modules
+playwright-report
+test-results
+package-lock.json
+.claude
+
+# Hand-formatted: the tables and code fences are deliberate.
+plan.md

@@ -98,9 +98,9 @@ Consequences worth designing around:
 | Framework | **Vue 3** (`<script setup>`, TS) | Decided. Already scaffolded. |
 | Build | **Vite 8** | Decided. Already scaffolded. |
 | Language | **TypeScript** | Already configured; STAC payloads are deeply nested and benefit from types. |
-| Routing | **Vue Router 4** | Two routes; URL is the shareable state container. |
-| State | **Pinia** | Selection basket and credentials are cross-component state. |
-| Map | **MapLibre GL JS 5** | WebGL renders thousands of footprints on the GPU; `feature-state` gives free hover/select styling; keyless vector basemaps available. Leaflet would need a canvas plugin and its draw plugin is unmaintained (last release 2018). |
+| Routing | **Vue Router 5** | Two routes; URL is the shareable state container. |
+| State | **Pinia 4** | Selection basket and credentials are cross-component state. |
+| Map | **MapLibre GL JS 6** | WebGL renders thousands of footprints on the GPU; `feature-state` gives free hover/select styling; keyless vector basemaps available. Leaflet would need a canvas plugin and its draw plugin is unmaintained (last release 2018). |
 | Drawing | **Terra Draw** (`terra-draw` + `terra-draw-maplibre-gl-adapter`) | Actively maintained, adapter-based, has a rectangle mode. `mapbox-gl-draw` carries Mapbox licensing lineage. |
 | Projections | **proj4js** | SWEREF99 TM (EPSG:3006) ↔ WGS84 for the coordinate search box. Swedish users think in SWEREF. |
 | HTTP | **native `fetch`** | No axios needed. Requires `AbortController` for search cancellation and `ReadableStream` for download progress. |
