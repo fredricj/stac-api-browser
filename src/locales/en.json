@@ -26,8 +26,21 @@
     "notFound": "Unknown catalog \"{id}\".",
     "notFoundHint": "It may have been removed, or the link may be mistyped."
   },
+  "map": {
+    "ariaLabel": "Map of item footprints. {count} shown. Use the results list to select items with the keyboard.",
+    "basemap": {
+      "label": "Basemap",
+      "light": "Light",
+      "dark": "Dark",
+      "aerial": "Aerial"
+    },
+    "popup": {
+      "title": "{count} items here"
+    },
+    "selectedCount": "{count} selected",
+    "fixtureNotice": "Showing recorded sample footprints. Live search arrives in the next phase."
+  },
   "card": {
-    "collectionsApprox": "~{count} collections",
     "browse": "Browse",
     "docs": "Product page",
     "remove": "Remove",

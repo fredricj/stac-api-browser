@@ -1,7 +1,10 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRegistryStore } from '@/stores/registryStore'
+import StacMap from '@/components/map/StacMap.vue'
+import type { StacItem } from '@/types/stac'
+import searchFixture from '@/services/__fixtures__/search-get-page1.json'
 
 const props = defineProps<{ apiId: string }>()
 
@@ -9,15 +12,31 @@ const { t } = useI18n()
 const registry = useRegistryStore()
 
 const entry = computed(() => registry.byId(props.apiId))
+
+// Cast through unknown: the JSON import widens tuples like `bbox` to number[].
+const items = computed(
+  () => (searchFixture as unknown as { features: StacItem[] }).features,
+)
+
+const selectedKeys = ref<Set<string>>(new Set())
+const hoveredKey = ref<string | null>(null)
+
+function toggle(key: string) {
+  const next = new Set(selectedKeys.value)
+  if (next.has(key)) next.delete(key)
+  else next.add(key)
+  selectedKeys.value = next
+}
 </script>
 
 <template>
   <div class="browser">
-    <RouterLink class="back" :to="{ name: 'home' }">
-      &larr; {{ t('nav.backToCatalogs') }}
-    </RouterLink>
-
-    <h1>{{ t('browser.heading', { name: entry?.title ?? apiId }) }}</h1>
+    <header class="browser-head">
+      <RouterLink class="back" :to="{ name: 'home' }">
+        &larr; {{ t('nav.backToCatalogs') }}
+      </RouterLink>
+      <h1>{{ t('browser.heading', { name: entry?.title ?? apiId }) }}</h1>
+    </header>
 
     <!-- An id that is not in the registry: a stale bookmark, or a custom
          catalog removed on another device. -->
@@ -26,15 +45,21 @@ const entry = computed(() => registry.byId(props.apiId))
       <span class="hint">{{ t('browser.notFoundHint') }}</span>
     </p>
 
-    <!-- Phase 3 replaces this with <StacMap>, Phase 4 with the search panel
-         and Phase 5 with the results list and selection basket. -->
     <div v-else class="layout">
       <aside class="panel" aria-label="Search">
-        <p class="stub">{{ t('common.comingSoon') }}</p>
+        <p class="notice">{{ t('map.fixtureNotice') }}</p>
+        <p class="count">
+          {{ t('map.selectedCount', { count: selectedKeys.size }) }}
+        </p>
       </aside>
-      <div class="map-slot">
-        <p class="stub">{{ t('common.comingSoon') }}</p>
-      </div>
+
+      <StacMap
+        :items="items"
+        :selected-keys="selectedKeys"
+        :hovered-key="hoveredKey"
+        @toggle="toggle"
+        @hover="hoveredKey = $event"
+      />
     </div>
   </div>
 </template>
@@ -47,6 +72,12 @@ const entry = computed(() => registry.byId(props.apiId))
   flex: 1 1 auto;
   min-height: 0;
   padding: var(--sp-5) var(--sp-4);
+}
+
+.browser-head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
 }
 
 .back {
@@ -63,21 +94,30 @@ const entry = computed(() => registry.byId(props.apiId))
   grid-template-columns: var(--sidebar-w) 1fr;
   gap: var(--sp-4);
   flex: 1 1 auto;
-  min-height: 24rem;
+  min-height: 28rem;
 }
 
-.panel,
-.map-slot {
-  display: grid;
-  place-items: center;
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  padding: var(--sp-4);
   background: var(--c-surface);
   border: 1px solid var(--c-border);
   border-radius: var(--r-lg);
 }
 
-.stub {
-  color: var(--c-text-faint);
+.notice {
+  font-size: var(--fs-xs);
+  color: var(--c-warning);
+  background: var(--c-warning-bg);
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--r-md);
+}
+
+.count {
   font-size: var(--fs-sm);
+  color: var(--c-text-muted);
 }
 
 .not-found {

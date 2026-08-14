@@ -6,6 +6,12 @@ import App from '@/App.vue'
 import i18n from '@/i18n'
 import { router as appRouter } from '@/router'
 
+// The browse route mounts MapLibre, which needs WebGL that jsdom lacks.
+vi.mock('maplibre-gl', async () => {
+  const { createMaplibreMock } = await import('@/test/maplibreMock')
+  return createMaplibreMock()
+})
+
 /**
  * Phase 0 milestone: the shell boots and both routes render.
  * Uses memory history so the test does not depend on jsdom's location.
@@ -75,7 +81,7 @@ describe('App shell', () => {
     await flushPromises()
 
     expect(wrapper.text()).toContain('Höjddata')
-    expect(wrapper.find('.map-slot').exists()).toBe(true)
+    expect(wrapper.find('.map-root').exists()).toBe(true)
   })
 
   it('explains an unknown catalog id instead of rendering an empty page', async () => {
@@ -86,6 +92,6 @@ describe('App shell', () => {
 
     expect(wrapper.find('.not-found').exists()).toBe(true)
     expect(wrapper.text()).toContain('no-such-catalog')
-    expect(wrapper.find('.map-slot').exists()).toBe(false)
+    expect(wrapper.find('.map-root').exists()).toBe(false)
   })
 })

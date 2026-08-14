@@ -26,8 +26,21 @@
     "notFound": "Okänd katalog ”{id}”.",
     "notFoundHint": "Den kan ha tagits bort, eller så är länken felstavad."
   },
+  "map": {
+    "ariaLabel": "Karta över objektens utbredning. {count} visas. Använd resultatlistan för att välja objekt med tangentbordet.",
+    "basemap": {
+      "label": "Bakgrundskarta",
+      "light": "Ljus",
+      "dark": "Mörk",
+      "aerial": "Flygfoto"
+    },
+    "popup": {
+      "title": "{count} objekt här"
+    },
+    "selectedCount": "{count} valda",
+    "fixtureNotice": "Visar inspelade exempelrutor. Live-sökning kommer i nästa fas."
+  },
   "card": {
-    "collectionsApprox": "~{count} samlingar",
     "browse": "Utforska",
     "docs": "Produktsida",
     "remove": "Ta bort",

@@ -7,6 +7,10 @@ import vue from '@vitejs/plugin-vue'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [vue()],
+  // MapLibre spawns its worker with `{ type: 'module' }`, so the worker asset
+  // has to be ES too. The default ('iife') would force MapLibre down its
+  // classic-worker fallback path.
+  worker: { format: 'es' },
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),

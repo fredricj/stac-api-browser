@@ -4,10 +4,11 @@ A web-based browser for [STAC](https://stacspec.org/) APIs, built around
 Lantmäteriet's Swedish geodata catalogs: search items on a map, select the areas
 you want, and download the assets.
 
-Implementation is tracked in [`plan.md`](./plan.md). **Phases 0–2 are complete** —
-the app shell boots, the STAC client is typed and tested, and the front page
-lists the catalogs with live status and lets you add your own. The map, search
-and download UI arrive in later phases.
+Implementation is tracked in [`plan.md`](./plan.md). **Phases 0–3 are complete** —
+the app shell boots, the STAC client is typed and tested, the front page lists
+the catalogs and lets you add your own, and the browse page renders item
+footprints on a MapLibre map with hover, click-to-select and basemap switching.
+Search and download arrive in later phases.
 
 ## Testing against real payloads
 
@@ -76,3 +77,10 @@ Data is licensed CC BY 4.0 by Lantmäteriet.
   it is installed as a dev dependency.
 - Playwright's browser binaries are **not** downloaded by `npm install`. Run
   `npx playwright install chromium` before `npm run test:e2e`.
+- MapLibre needs WebGL, which jsdom does not provide, so component tests
+  substitute `src/test/maplibreMock.ts` for the real module. It records
+  sources, layers, feature-state and handlers, so the tests still assert on
+  behaviour rather than merely "it did not throw".
+- The map chunk is ~958 kB (249 kB gzipped) — that is MapLibre, and it is
+  confined to the lazily-loaded browse route, so the catalog list never pays
+  for it. The 500 kB build warning is expected.
