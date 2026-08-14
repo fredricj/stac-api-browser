@@ -1,4 +1,4 @@
-import { describe, expect, it, beforeEach } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
 import { createPinia } from 'pinia'
 import { createRouter, createMemoryHistory } from 'vue-router'
@@ -32,6 +32,18 @@ function mountApp() {
 describe('App shell', () => {
   beforeEach(() => {
     i18n.global.locale.value = 'en'
+    localStorage.clear()
+    // Neither route fetches anything on mount. Fail loudly if that changes.
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => {
+        throw new Error('the app shell must not fetch on mount')
+      }),
+    )
+  })
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
   })
 
   it('renders the header on the catalog list route', async () => {
@@ -50,17 +62,30 @@ describe('App shell', () => {
     await router.isReady()
     await flushPromises()
 
-    const hrefs = wrapper.findAll('a.api-card').map((a) => a.attributes('href'))
+    const hrefs = wrapper
+      .findAll('a.card-main')
+      .map((a) => a.attributes('href'))
     expect(hrefs).toContain('/api/lantmateriet-bild')
   })
 
-  it('renders the browser route and passes apiId through', async () => {
+  it('renders the browser route and resolves the catalog title', async () => {
     const { wrapper, router } = mountApp()
     await router.push('/api/lantmateriet-hojd')
     await router.isReady()
     await flushPromises()
 
-    expect(wrapper.text()).toContain('lantmateriet-hojd')
+    expect(wrapper.text()).toContain('Höjddata')
     expect(wrapper.find('.map-slot').exists()).toBe(true)
+  })
+
+  it('explains an unknown catalog id instead of rendering an empty page', async () => {
+    const { wrapper, router } = mountApp()
+    await router.push('/api/no-such-catalog')
+    await router.isReady()
+    await flushPromises()
+
+    expect(wrapper.find('.not-found').exists()).toBe(true)
+    expect(wrapper.text()).toContain('no-such-catalog')
+    expect(wrapper.find('.map-slot').exists()).toBe(false)
   })
 })

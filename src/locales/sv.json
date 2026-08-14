@@ -11,15 +11,48 @@
   },
   "home": {
     "heading": "STAC-kataloger",
-    "intro": "Välj en katalog för att söka bland dess objekt på en karta och ladda ner de filer du behöver.",
-    "collections": "samlingar",
+    "intro": "Välj en katalog för att söka bland dess objekt på en karta och ladda ner de filer du behöver. Att utforska kräver inget konto — bara nedladdning gör det.",
     "addCustom": "Lägg till katalog",
-    "unreachable": "Kan inte nås"
+    "yourCatalogs": "Tillagda av dig",
+    "builtIn": "Inbyggda"
+  },
+  "catalogs": {
+    "bild": "Flygbilder (ortofoton) över Sverige, från 1960-talet till idag. Molnoptimerade GeoTIFF-rutor i ett 2,5 km-rutnät, ner till 0,16 m upplösning.",
+    "hojd": "Markhöjdmodell med 1 m upplösning, samt punktmoln från skoglig laserskanning.",
+    "vektor": "Byggnader, adresser, ortnamn, marktäcke, fastighetsindelning och administrativa gränser, levererat som zippade vektorfiler."
   },
   "browser": {
     "heading": "Utforska {name}",
     "notFound": "Okänd katalog ”{id}”.",
     "notFoundHint": "Den kan ha tagits bort, eller så är länken felstavad."
+  },
+  "card": {
+    "collectionsApprox": "~{count} samlingar",
+    "browse": "Utforska",
+    "docs": "Produktsida",
+    "remove": "Ta bort",
+    "removeConfirm": "Ta bort ”{title}” från dina kataloger?",
+    "authBasic": "Inloggning krävs för nedladdning",
+    "authNone": "Ingen inloggning krävs"
+  },
+  "addDialog": {
+    "title": "Lägg till en STAC-katalog",
+    "intro": "Klistra in adressen till en STAC API-startsida. Appen pratar direkt med den från din webbläsare, så katalogen måste tillåta anrop från andra webbplatser.",
+    "urlLabel": "Katalogadress",
+    "urlPlaceholder": "https://example.org/stac/v1/",
+    "check": "Kontrollera katalogen",
+    "checking": "Kontrollerar…",
+    "add": "Lägg till katalog",
+    "addAnyway": "Lägg till ändå",
+    "cancel": "Avbryt",
+    "invalidUrl": "Det ser inte ut som en giltig http(s)-adress.",
+    "duplicate": "Katalogen finns redan i din lista.",
+    "foundTitle": "Hittade: {title}",
+    "supportsSearch": "Stöder objektsökning.",
+    "noItemSearch": "Katalogen anger inte stöd för objektsökning. Du kan lägga till den ändå, men kartvyn kanske inte fungerar.",
+    "unreachable": "Kunde inte nå katalogen: {error}",
+    "corsExplainer": "Webbläsaren kan inte skilja dessa åt: en CORS-begränsning (katalogen tillåter inte att andra webbplatser läser den), en felstavad adress, eller inget nätverk. Om adressen stämmer är det troligen CORS — och inget du kan ändra härifrån.",
+    "addedToast": "Lade till {title}."
   },
   "common": {
     "loading": "Laddar…",

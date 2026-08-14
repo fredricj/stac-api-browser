@@ -11,15 +11,48 @@
   },
   "home": {
     "heading": "STAC catalogs",
-    "intro": "Pick a catalog to search its items on a map and download the assets you need.",
-    "collections": "collections",
+    "intro": "Pick a catalog to search its items on a map and download the assets you need. Browsing needs no account — only downloading does.",
     "addCustom": "Add a catalog",
-    "unreachable": "Unreachable"
+    "yourCatalogs": "Added by you",
+    "builtIn": "Built in"
+  },
+  "catalogs": {
+    "bild": "Aerial orthophotos of Sweden, from the 1960s to today. Cloud-optimised GeoTIFF tiles on a 2.5 km grid, down to 0.16 m resolution.",
+    "hojd": "Ground elevation model at 1 m resolution, plus forest laser scanning point clouds.",
+    "vektor": "Buildings, addresses, place names, land cover, property division and administrative boundaries, delivered as zipped vector files."
   },
   "browser": {
     "heading": "Browse {name}",
     "notFound": "Unknown catalog \"{id}\".",
     "notFoundHint": "It may have been removed, or the link may be mistyped."
+  },
+  "card": {
+    "collectionsApprox": "~{count} collections",
+    "browse": "Browse",
+    "docs": "Product page",
+    "remove": "Remove",
+    "removeConfirm": "Remove \"{title}\" from your catalogs?",
+    "authBasic": "Sign-in needed to download",
+    "authNone": "No sign-in needed"
+  },
+  "addDialog": {
+    "title": "Add a STAC catalog",
+    "intro": "Paste the URL of a STAC API landing page. The app talks to it directly from your browser, so the catalog must allow cross-origin requests.",
+    "urlLabel": "Catalog URL",
+    "urlPlaceholder": "https://example.org/stac/v1/",
+    "check": "Check catalog",
+    "checking": "Checking…",
+    "add": "Add catalog",
+    "addAnyway": "Add anyway",
+    "cancel": "Cancel",
+    "invalidUrl": "That does not look like a valid http(s) URL.",
+    "duplicate": "That catalog is already in your list.",
+    "foundTitle": "Found: {title}",
+    "supportsSearch": "Supports item search.",
+    "noItemSearch": "This catalog does not advertise item search. You can still add it, but the map view may not work.",
+    "unreachable": "Could not reach that catalog: {error}",
+    "corsExplainer": "The browser cannot tell these apart: a CORS restriction (the catalog does not allow other sites to read it), a mistyped address, or no network. If the address is right, it is most likely CORS — and not something you can change from here.",
+    "addedToast": "Added {title}."
   },
   "common": {
     "loading": "Loading…",

@@ -392,7 +392,7 @@ the browser is a download manager. Recommend it proactively above a threshold.
 ### Phase 2 — Front page
 10. `config/registry.ts` with the three Lantmäteriet catalogs: id, title, description, base URL, asset host, auth type (`basic`), default CRS, licence, docs link.
 11. `registryStore` merging built-ins with user-added APIs from `localStorage`.
-12. `HomeView` + `StacApiCard`: title, description, and live-probed status — collection count and reachability fetched from each root on mount, with graceful degradation when offline.
+12. `HomeView` + `StacApiCard`: title, description and license.
 13. `AddCustomApiDialog`: paste a STAC root URL, validate `conformsTo` for `item-search`, warn explicitly if the API lacks it or fails CORS (the most likely failure for third-party APIs), then persist.
 
 **Milestone:** front page lists the three APIs, live status, custom APIs can be added.

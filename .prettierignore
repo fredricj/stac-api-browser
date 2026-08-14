@@ -9,6 +9,7 @@ package-lock.json
 
 # Hand-formatted: the tables and code fences are deliberate.
 plan.md
+README.md
 
 # Verbatim recordings of live API responses. Kept minified and byte-faithful
 # so they stay a true record of what the server sent.

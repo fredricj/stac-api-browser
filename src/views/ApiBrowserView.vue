@@ -1,9 +1,14 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useRegistryStore } from '@/stores/registryStore'
 
-defineProps<{ apiId: string }>()
+const props = defineProps<{ apiId: string }>()
 
 const { t } = useI18n()
+const registry = useRegistryStore()
+
+const entry = computed(() => registry.byId(props.apiId))
 </script>
 
 <template>
@@ -12,11 +17,18 @@ const { t } = useI18n()
       &larr; {{ t('nav.backToCatalogs') }}
     </RouterLink>
 
-    <h1>{{ t('browser.heading', { name: apiId }) }}</h1>
+    <h1>{{ t('browser.heading', { name: entry?.title ?? apiId }) }}</h1>
+
+    <!-- An id that is not in the registry: a stale bookmark, or a custom
+         catalog removed on another device. -->
+    <p v-if="!entry" class="not-found">
+      {{ t('browser.notFound', { id: apiId }) }}
+      <span class="hint">{{ t('browser.notFoundHint') }}</span>
+    </p>
 
     <!-- Phase 3 replaces this with <StacMap>, Phase 4 with the search panel
          and Phase 5 with the results list and selection basket. -->
-    <div class="layout">
+    <div v-else class="layout">
       <aside class="panel" aria-label="Search">
         <p class="stub">{{ t('common.comingSoon') }}</p>
       </aside>
@@ -66,6 +78,20 @@ const { t } = useI18n()
 .stub {
   color: var(--c-text-faint);
   font-size: var(--fs-sm);
+}
+
+.not-found {
+  padding: var(--sp-4);
+  border-radius: var(--r-md);
+  background: var(--c-danger-bg);
+  color: var(--c-danger);
+  font-size: var(--fs-sm);
+}
+
+.not-found .hint {
+  display: block;
+  margin-top: var(--sp-1);
+  opacity: 0.85;
 }
 
 @media (max-width: 52rem) {

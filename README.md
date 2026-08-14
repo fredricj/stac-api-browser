@@ -4,9 +4,10 @@ A web-based browser for [STAC](https://stacspec.org/) APIs, built around
 Lantmäteriet's Swedish geodata catalogs: search items on a map, select the areas
 you want, and download the assets.
 
-Implementation is tracked in [`plan.md`](./plan.md). **Phases 0–1 are complete** —
-the app shell boots with both routes, and the STAC client is typed and tested.
-The map, search and download UI arrive in later phases.
+Implementation is tracked in [`plan.md`](./plan.md). **Phases 0–2 are complete** —
+the app shell boots, the STAC client is typed and tested, and the front page
+lists the catalogs with live status and lets you add your own. The map, search
+and download UI arrive in later phases.
 
 ## Testing against real payloads
 
