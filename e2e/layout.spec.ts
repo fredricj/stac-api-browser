@@ -9,7 +9,8 @@ import { expect, test } from '@playwright/test'
  */
 
 const DEV_URL = 'http://localhost:5199'
-const URL = `${DEV_URL}/api/lantmateriet-bild?bbox=17.9,59.2,18.2,59.4&map=18.05,59.3,9`
+const CATALOG = 'lantmateriet-bild'
+const URL = `${DEV_URL}/api/${CATALOG}?bbox=17.9,59.2,18.2,59.4&map=18.05,59.3,9`
 const SETUP = `document.querySelector('.map-root')?.__vueParentComponent?.setupState`
 
 test.describe('browse layout', () => {
@@ -113,5 +114,62 @@ test.describe('browse layout', () => {
     // them useless, so here the page is what scrolls.
     expect(metrics.pageScrollHeight).toBeGreaterThan(metrics.viewportHeight)
     expect(metrics.map).toBeGreaterThan(250)
+  })
+})
+
+test.describe('search panel', () => {
+  test('keeps the search button on screen however far the filters scroll', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1600, height: 900 })
+    await page.goto(`${DEV_URL}/api/${CATALOG}`)
+    await page.waitForFunction(`${SETUP}?.isReady === true`, null, {
+      timeout: 30_000,
+    })
+    // The 731 collections are what make the panel overflow in the first place.
+    await page.waitForFunction(
+      `document.querySelectorAll('.collections .option').length > 0`,
+      null,
+      { timeout: 30_000 },
+    )
+
+    const measure = () =>
+      page.evaluate(() => {
+        const panel = document.querySelector('.panel') as HTMLElement
+        const button = document.querySelector('.btn--primary') as HTMLElement
+        // Deliberately not tied to which element scrolls: the property under
+        // test is that the button stays put, however that is achieved.
+        const regions = [panel, ...panel.querySelectorAll('*')] as HTMLElement[]
+        return {
+          overflows: regions.some((el) => el.scrollHeight > el.clientHeight),
+          scrolledBy: regions.reduce((sum, el) => sum + el.scrollTop, 0),
+          buttonTop: button.getBoundingClientRect().top,
+          buttonBottom: button.getBoundingClientRect().bottom,
+          panelBottom: panel.getBoundingClientRect().bottom,
+          viewportHeight: window.innerHeight,
+        }
+      })
+
+    const before = await measure()
+
+    // The premise: there really is more filter than fits.
+    expect(before.overflows).toBe(true)
+    expect(before.buttonBottom).toBeLessThanOrEqual(before.panelBottom + 1)
+
+    // Scroll everything inside the panel as far as it goes.
+    await page.evaluate(() => {
+      const panel = document.querySelector('.panel') as HTMLElement
+      for (const el of [panel, ...panel.querySelectorAll('*')]) {
+        ;(el as HTMLElement).scrollTop = (el as HTMLElement).scrollHeight
+      }
+    })
+    const after = await measure()
+
+    expect(after.scrolledBy).toBeGreaterThan(0)
+    // The button did not move, and is still inside both the panel and the
+    // viewport — which is the whole point of pinning it.
+    expect(after.buttonTop).toBeCloseTo(before.buttonTop, 0)
+    expect(after.buttonBottom).toBeLessThanOrEqual(after.panelBottom + 1)
+    expect(after.buttonBottom).toBeLessThanOrEqual(after.viewportHeight)
   })
 })

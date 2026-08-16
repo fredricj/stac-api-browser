@@ -88,99 +88,103 @@ const resultSummary = computed(() => {
 
 <template>
   <aside class="panel" :aria-label="t('search.panelLabel')">
-    <ActiveFilterChips
-      :bbox="store.bbox"
-      :collections="store.collections"
-      :datetime="store.datetime"
-      :fields="store.queryableFields"
-      :values="store.queryableValues"
-      @clear-bbox="store.setBbox(null)"
-      @clear-collections="store.setCollections([])"
-      @clear-datetime="store.setDatetime(null)"
-      @clear-queryable="clearQueryable"
-      @clear-all="store.clearFilters()"
-    />
+    <div class="panel-scroll">
+      <ActiveFilterChips
+        :bbox="store.bbox"
+        :collections="store.collections"
+        :datetime="store.datetime"
+        :fields="store.queryableFields"
+        :values="store.queryableValues"
+        @clear-bbox="store.setBbox(null)"
+        @clear-collections="store.setCollections([])"
+        @clear-datetime="store.setDatetime(null)"
+        @clear-queryable="clearQueryable"
+        @clear-all="store.clearFilters()"
+      />
 
-    <CoordinateSearchBox :default-crs="nativeCrs" @locate="onLocate" />
+      <CoordinateSearchBox :default-crs="nativeCrs" @locate="onLocate" />
 
-    <BboxInput
-      :model-value="store.bbox"
-      @update:model-value="store.setBbox($event)"
-    />
+      <BboxInput
+        :model-value="store.bbox"
+        @update:model-value="store.setBbox($event)"
+      />
 
-    <DateRangeFilter
-      :model-value="store.datetime"
-      @update:model-value="store.setDatetime($event)"
-    />
+      <DateRangeFilter
+        :model-value="store.datetime"
+        @update:model-value="store.setDatetime($event)"
+      />
 
-    <CollectionFilter
-      :collections="store.allCollections"
-      :selected="store.collections"
-      :loading="store.collectionsLoading"
-      @update:selected="store.setCollections($event)"
-    />
+      <CollectionFilter
+        :collections="store.allCollections"
+        :selected="store.collections"
+        :loading="store.collectionsLoading"
+        @update:selected="store.setCollections($event)"
+      />
 
-    <QueryableFilters
-      :fields="store.queryableFields"
-      :values="store.queryableValues"
-      :loading="store.queryablesLoading"
-      @update:values="store.setQueryableValues($event)"
-    />
+      <QueryableFilters
+        :fields="store.queryableFields"
+        :values="store.queryableValues"
+        :loading="store.queryablesLoading"
+        @update:values="store.setQueryableValues($event)"
+      />
+    </div>
 
-    <div class="actions">
-      <!-- The area guard. Item counts grow with the square of the box and
-           there is no total to warn afterwards, so this asks first. -->
-      <div v-if="needsConfirmation" class="guard" role="alert">
-        <p class="guard-text">
-          {{
-            t('search.guard.warning', {
-              area: n(Math.round(store.areaKm2)),
-            })
-          }}
-        </p>
-        <button type="button" class="btn btn--warn" @click="confirmAndSearch">
-          {{ t('search.guard.searchAnyway') }}
+    <footer class="panel-foot">
+      <div class="actions">
+        <!-- The area guard. Item counts grow with the square of the box and
+             there is no total to warn afterwards, so this asks first. -->
+        <div v-if="needsConfirmation" class="guard" role="alert">
+          <p class="guard-text">
+            {{
+              t('search.guard.warning', {
+                area: n(Math.round(store.areaKm2)),
+              })
+            }}
+          </p>
+          <button type="button" class="btn btn--warn" @click="confirmAndSearch">
+            {{ t('search.guard.searchAnyway') }}
+          </button>
+        </div>
+
+        <button
+          v-else
+          type="button"
+          class="btn btn--primary"
+          :disabled="!store.canSearch"
+          @click="runSearch"
+        >
+          {{ store.loading ? t('search.searching') : t('search.search') }}
+        </button>
+
+        <button
+          v-if="store.loading"
+          type="button"
+          class="btn"
+          @click="store.cancel()"
+        >
+          {{ t('common.cancel') }}
         </button>
       </div>
 
-      <button
-        v-else
-        type="button"
-        class="btn btn--primary"
-        :disabled="!store.canSearch"
-        @click="runSearch"
-      >
-        {{ store.loading ? t('search.searching') : t('search.search') }}
-      </button>
+      <!-- Announced politely: result counts matter to screen reader users, but
+           should not interrupt whatever they are doing in the panel. -->
+      <p class="summary" role="status" aria-live="polite">
+        <template v-if="store.error">
+          <span class="error">{{ t('search.results.failed') }}</span>
+        </template>
+        <template v-else-if="resultSummary">{{ resultSummary }}</template>
+        <template v-else-if="!store.hasSearched">
+          {{ t('search.results.notYet') }}
+        </template>
+      </p>
 
-      <button
-        v-if="store.loading"
-        type="button"
-        class="btn"
-        @click="store.cancel()"
-      >
-        {{ t('common.cancel') }}
-      </button>
-    </div>
-
-    <!-- Announced politely: result counts matter to screen reader users, but
-         should not interrupt whatever they are doing in the panel. -->
-    <p class="summary" role="status" aria-live="polite">
-      <template v-if="store.error">
-        <span class="error">{{ t('search.results.failed') }}</span>
-      </template>
-      <template v-else-if="resultSummary">{{ resultSummary }}</template>
-      <template v-else-if="!store.hasSearched">
-        {{ t('search.results.notYet') }}
-      </template>
-    </p>
-
-    <p v-if="store.error" class="error-detail">
-      {{ store.error.message }}
-      <span v-if="store.error.likelyCors" class="error-hint">
-        {{ t('search.results.corsHint') }}
-      </span>
-    </p>
+      <p v-if="store.error" class="error-detail">
+        {{ store.error.message }}
+        <span v-if="store.error.likelyCors" class="error-hint">
+          {{ t('search.results.corsHint') }}
+        </span>
+      </p>
+    </footer>
   </aside>
 </template>
 
@@ -188,14 +192,42 @@ const resultSummary = computed(() => {
 .panel {
   display: flex;
   flex-direction: column;
-  gap: var(--sp-3);
   padding: var(--sp-4);
   background: var(--c-surface);
   border: 1px solid var(--c-border);
   border-radius: var(--r-lg);
-  overflow-y: auto;
   min-height: 0;
+  /* The frame no longer scrolls; `.panel-scroll` inside it does, which is
+     what keeps the footer on screen. */
+  overflow: hidden;
+  /*
+   * Load-bearing despite nothing here being positioned. `overflow` only clips
+   * descendants whose containing block is inside the scroll container, so a
+   * static panel let the absolutely positioned `.sr-only` labels resolve
+   * against the initial containing block and stretch the whole document.
+   */
   position: relative;
+}
+
+.panel-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  padding-right: var(--sp-2);
+  margin-right: calc(var(--sp-2) * -1);
+}
+
+.panel-foot {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  margin-top: var(--sp-3);
+  padding-top: var(--sp-3);
+  border-top: 1px solid var(--c-border);
 }
 
 .actions {
