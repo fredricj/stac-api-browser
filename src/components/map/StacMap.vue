@@ -390,7 +390,7 @@ defineExpose({ fitToBbox, fitToItems, resetAutoFit })
   position: relative;
   width: 100%;
   height: 100%;
-  min-height: 20rem;
+  min-height: var(--map-min-h, 20rem);
   border-radius: var(--r-lg);
   overflow: hidden;
   background: var(--c-surface-2);

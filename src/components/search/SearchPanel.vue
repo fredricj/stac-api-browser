@@ -195,6 +195,7 @@ const resultSummary = computed(() => {
   border-radius: var(--r-lg);
   overflow-y: auto;
   min-height: 0;
+  position: relative;
 }
 
 .actions {

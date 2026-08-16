@@ -135,6 +135,7 @@ function toggleKey(key: string) {
         <SelectionBasket :items="store.items" :bbox="store.bbox" />
 
         <ResultsList
+          class="results-fill"
           :items="store.items"
           :selected-keys="selection.keys"
           :hovered-key="hoveredKey"
@@ -170,8 +171,9 @@ function toggleKey(key: string) {
   display: flex;
   flex-direction: column;
   gap: var(--sp-4);
-  flex: 1 1 auto;
+  height: calc(100dvh - var(--header-h));
   min-height: 0;
+  overflow: hidden;
   padding: var(--sp-5) var(--sp-4);
 }
 
@@ -195,12 +197,14 @@ function toggleKey(key: string) {
 .layout {
   display: grid;
   grid-template-columns: var(--sidebar-w) minmax(0, 1fr) var(--sidebar-w);
+  grid-template-rows: minmax(0, 1fr);
   gap: var(--sp-4);
   flex: 1 1 auto;
-  min-height: 34rem;
+  min-height: 0;
 }
 
 .map-column {
+  --map-min-h: 0px;
   display: flex;
   flex-direction: column;
   gap: var(--sp-2);
@@ -218,9 +222,9 @@ function toggleKey(key: string) {
 
 /* The results list owns the leftover height so its own scroller, not the
    page, is what moves. */
-.results-column > :last-child {
+.results-fill {
   flex: 1 1 auto;
-  min-height: 12rem;
+  min-height: 0;
 }
 
 .not-found {
@@ -240,18 +244,28 @@ function toggleKey(key: string) {
 /* Below three columns, drop the results beside the map rather than shrinking
    all three into uselessness. */
 @media (max-width: 80rem) {
+  .browser {
+    height: auto;
+    min-height: calc(100dvh - var(--header-h));
+    overflow: visible;
+  }
   .layout {
     grid-template-columns: var(--sidebar-w) minmax(0, 1fr);
+    grid-template-rows: minmax(20rem, 1fr) auto;
   }
   .results-column {
     grid-column: 1 / -1;
-    max-height: 28rem;
+  }
+  .results-fill {
+    height: 30rem;
+    flex: 0 0 auto;
   }
 }
 
 @media (max-width: 52rem) {
   .layout {
     grid-template-columns: 1fr;
+    grid-template-rows: auto minmax(24rem, auto) auto;
   }
   .map-column {
     min-height: 24rem;
