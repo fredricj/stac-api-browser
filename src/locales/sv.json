@@ -195,6 +195,88 @@
     "change": "Byt",
     "signOut": "Logga ut"
   },
+  "download": {
+    "open": "Ladda ner valda",
+    "title": "Ladda ner",
+    "summary": "{count} filer, cirka {size}.",
+    "sizeEstimated": "(delvis uppskattat)",
+    "tierLegend": "Så här laddar du ner",
+    "tooBigForBrowser": "Med {size} är det här ett jobb för en nedladdningshanterare, inte en webbläsarflik. Exportera en lista nedan och låt aria2c hämta den — den återupptar, kör parallellt och överlever att du stänger locket.",
+    "signInFirst": "Logga in ovan innan du börjar; filerna kräver ett Geotorget-konto.",
+    "chooseFolder": "Välj en mapp…",
+    "startSequential": "Börja ladda ner",
+    "running": "Laddar ner…",
+    "permissionDenied": "Skrivbehörighet till mappen gavs inte.",
+    "sequentialWarning": "En fil i taget, och varje fil hålls i minnet innan den sparas. Låt fliken vara öppen tills det är klart.",
+    "sequentialFailed": "En fil kunde inte hämtas. Kontrollera inloggningen och försök igen.",
+    "tier": {
+      "folder": {
+        "name": "Spara till en mapp",
+        "hint": "Strömmar direkt till disk, flera filer i taget. Återupptar en avbruten körning och håller aldrig en hel fil i minnet.",
+        "unsupported": "Finns inte i den här webbläsaren. Chrome, Edge och Opera stöder det."
+      },
+      "sequential": {
+        "name": "Spara en i taget",
+        "hint": "Fungerar överallt, men varje fil går via minnet och fliken måste vara öppen. Bäst för ett fåtal filer."
+      },
+      "manifest": {
+        "name": "Exportera en lista för en nedladdningshanterare",
+        "hint": "Rätt svar för ett stort jobb, och finns alltid."
+      }
+    },
+    "manifest": {
+      "intro": "Ladda ner en lista eller ett skript och kör det med ett verktyg gjort för uppgiften.",
+      "credentials": "Inget lösenord skrivs in i filerna. De läser ${user} och ${password} från din miljö när du kör dem.",
+      "formats": {
+        "aria2c": {
+          "name": "aria2c-lista",
+          "hint": "Rekommenderas. Parallell och återupptagbar."
+        },
+        "curl": {
+          "name": "curl-skript",
+          "hint": "POSIX-skal, återupptar med --continue-at."
+        },
+        "wget": {
+          "name": "wget-skript",
+          "hint": "POSIX-skal, återupptar med --continue."
+        },
+        "powershell": {
+          "name": "PowerShell-skript",
+          "hint": "För Windows utan extra verktyg."
+        },
+        "urls": { "name": "URL-lista", "hint": "Ren text, en per rad." },
+        "csv": { "name": "CSV", "hint": "Urvalet som kalkylblad." },
+        "geojson": { "name": "GeoJSON", "hint": "Utbredningar, för GIS." }
+      }
+    },
+    "progressLabel": "Nedladdningsförlopp",
+    "counts": "{done} av {total}",
+    "skippedCount": "{count} finns redan",
+    "failedCount": "{count} misslyckades",
+    "pause": "Pausa",
+    "resume": "Fortsätt",
+    "cancel": "Avbryt",
+    "retryFailed": "Försök igen med {count} misslyckade",
+    "failuresTitle": "Kunde inte laddas ner",
+    "finished": "Klart: {done} nedladdade, {skipped} fanns redan, {failed} misslyckades.",
+    "showAll": "Visa alla filer",
+    "status": {
+      "pending": "väntar",
+      "active": "laddar ner",
+      "done": "klar",
+      "skipped": "finns redan",
+      "failed": "misslyckades",
+      "cancelled": "avbruten"
+    },
+    "failure": {
+      "auth": "inloggning nekad",
+      "forbidden": "ingen behörighet till produkten",
+      "notfound": "hittades inte",
+      "network": "nätverksfel",
+      "write": "kunde inte skriva till disk",
+      "http": "serverfel"
+    }
+  },
   "card": {
     "browse": "Utforska",
     "docs": "Produktsida",

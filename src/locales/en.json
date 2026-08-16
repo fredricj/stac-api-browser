@@ -195,6 +195,88 @@
     "change": "Change",
     "signOut": "Sign out"
   },
+  "download": {
+    "open": "Download selected",
+    "title": "Download",
+    "summary": "{count} files, about {size}.",
+    "sizeEstimated": "(part of this is estimated)",
+    "tierLegend": "How to download",
+    "tooBigForBrowser": "At {size} this is a job for a download manager, not a browser tab. Export a list below and let aria2c fetch it — it resumes, runs in parallel, and survives closing your laptop.",
+    "signInFirst": "Sign in above before starting; these files need a Geotorget account.",
+    "chooseFolder": "Choose a folder…",
+    "startSequential": "Start downloading",
+    "running": "Downloading…",
+    "permissionDenied": "Permission to write to that folder was not granted.",
+    "sequentialWarning": "One file at a time, each held in memory before it is saved. Keep this tab open until it finishes.",
+    "sequentialFailed": "A file could not be fetched. Check your sign-in and try again.",
+    "tier": {
+      "folder": {
+        "name": "Save to a folder",
+        "hint": "Streams straight to disk, several files at a time. Resumes an interrupted run, and never holds a whole file in memory.",
+        "unsupported": "Not available in this browser. Chrome, Edge and Opera support it."
+      },
+      "sequential": {
+        "name": "Save one at a time",
+        "hint": "Works everywhere, but each file passes through memory and the tab must stay open. Best for a handful of files."
+      },
+      "manifest": {
+        "name": "Export a list for a download manager",
+        "hint": "The right answer for a large job, and always available."
+      }
+    },
+    "manifest": {
+      "intro": "Download a list or script, then run it with a tool built for the job.",
+      "credentials": "No password is written into these files. They read ${user} and ${password} from your environment when you run them.",
+      "formats": {
+        "aria2c": {
+          "name": "aria2c list",
+          "hint": "Recommended. Parallel and resumable."
+        },
+        "curl": {
+          "name": "curl script",
+          "hint": "POSIX shell, resumes with --continue-at."
+        },
+        "wget": {
+          "name": "wget script",
+          "hint": "POSIX shell, resumes with --continue."
+        },
+        "powershell": {
+          "name": "PowerShell script",
+          "hint": "For Windows without extra tools."
+        },
+        "urls": { "name": "URL list", "hint": "Plain text, one per line." },
+        "csv": { "name": "CSV", "hint": "The selection as a spreadsheet." },
+        "geojson": { "name": "GeoJSON", "hint": "Footprints, for GIS." }
+      }
+    },
+    "progressLabel": "Download progress",
+    "counts": "{done} of {total}",
+    "skippedCount": "{count} already on disk",
+    "failedCount": "{count} failed",
+    "pause": "Pause",
+    "resume": "Resume",
+    "cancel": "Cancel",
+    "retryFailed": "Retry {count} failed",
+    "failuresTitle": "Could not be downloaded",
+    "finished": "Finished: {done} downloaded, {skipped} already there, {failed} failed.",
+    "showAll": "Show every file",
+    "status": {
+      "pending": "waiting",
+      "active": "downloading",
+      "done": "done",
+      "skipped": "already there",
+      "failed": "failed",
+      "cancelled": "cancelled"
+    },
+    "failure": {
+      "auth": "sign-in rejected",
+      "forbidden": "no access to this product",
+      "notfound": "not found",
+      "network": "network error",
+      "write": "could not write to disk",
+      "http": "server error"
+    }
+  },
   "card": {
     "browse": "Browse",
     "docs": "Product page",

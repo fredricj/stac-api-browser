@@ -18,6 +18,7 @@ import type { StacItem } from '@/types/stac'
 import { itemKey } from '@/types/stac'
 import { formatBytes, formatCount } from '@/utils/format'
 import CredentialsDialog from '@/components/download/CredentialsDialog.vue'
+import DownloadDialog from '@/components/download/DownloadDialog.vue'
 
 const props = defineProps<{
   /** The currently loaded results, for the bulk actions to operate on. */
@@ -34,6 +35,8 @@ const auth = useAuthStore()
 
 const credentialsDialog =
   useTemplateRef<InstanceType<typeof CredentialsDialog>>('credentialsDialog')
+const downloadDialog =
+  useTemplateRef<InstanceType<typeof DownloadDialog>>('downloadDialog')
 
 const loadedKeys = computed(() => new Set(props.items.map(itemKey)))
 
@@ -124,6 +127,15 @@ function signOut() {
       </p>
     </template>
 
+    <button
+      type="button"
+      class="download"
+      :disabled="selection.isEmpty"
+      @click="downloadDialog?.open()"
+    >
+      {{ t('download.open') }}
+    </button>
+
     <div class="actions" role="group" :aria-label="t('basket.bulkLabel')">
       <button
         type="button"
@@ -200,6 +212,7 @@ function signOut() {
         :docs-url="entry?.docsUrl"
       />
     </div>
+    <DownloadDialog ref="downloadDialog" />
   </section>
 </template>
 
@@ -297,6 +310,25 @@ function signOut() {
 
 .link--danger {
   color: var(--c-danger);
+}
+
+.download {
+  padding: var(--sp-2) var(--sp-4);
+  border: 1px solid var(--c-accent);
+  border-radius: var(--r-md);
+  background: var(--c-accent);
+  color: #fff;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  cursor: pointer;
+}
+.download:hover:not(:disabled) {
+  background: var(--c-accent-hover);
+  border-color: var(--c-accent-hover);
+}
+.download:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .auth {
