@@ -132,7 +132,11 @@ function toggleKey(key: string) {
       </div>
 
       <div class="results-column">
-        <SelectionBasket :items="store.items" :bbox="store.bbox" />
+        <SelectionBasket
+          :items="store.items"
+          :bbox="store.bbox"
+          :entry="entry ?? null"
+        />
 
         <ResultsList
           class="results-fill"
