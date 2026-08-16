@@ -225,9 +225,17 @@ export function createMaplibreMock() {
     ScaleControl: class ScaleControl {},
     LngLatBounds: FakeLngLatBounds,
     Popup: class Popup {},
+    // Called at module scope by `useMapLibre` to point MapLibre at the worker
+    // asset Vite emits. A no-op here; there is no real worker to aim at.
+    setWorkerUrl: (url: string) => {
+      workerUrls.push(url)
+    },
     default: { Map: FakeMap },
   }
 }
+
+/** Worker URLs the app has set, so a test can assert one was configured. */
+export const workerUrls: string[] = []
 
 export function resetMaplibreMock() {
   FakeMap.instances = []

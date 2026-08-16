@@ -134,6 +134,39 @@
       "corsHint": "Katalogen kunde inte nås. Den kan vara nere, eller inte tillåta anrop från andra webbplatser."
     }
   },
+  "results": {
+    "label": "Sökresultat",
+    "empty": "Inga objekt matchade. Prova ett större område, ett längre datumintervall eller färre egenskapsfilter.",
+    "selectItem": "Välj {id}",
+    "openItem": "Visa detaljer för {id}"
+  },
+  "basket": {
+    "label": "Valda för nedladdning",
+    "bulkLabel": "Åtgärder för flera objekt",
+    "title": "Valda",
+    "count": "{count} objekt",
+    "empty": "Inget valt ännu. Kryssa i objekt i listan, eller klicka på rutorna i kartan.",
+    "estimated": "uppskattat — {count} objekt saknar storlek",
+    "veryLarge": "Så här mycket data hämtas bäst med en nedladdningshanterare. Ett aria2c- eller curl-skript går att exportera när nedladdningarna är på plats.",
+    "outOfResults": "{count} av {total} finns inte bland de aktuella resultaten.",
+    "selectAll": "Välj alla {count} hämtade",
+    "selectInBox": "Välj alla i rutan",
+    "invert": "Invertera",
+    "clear": "Rensa",
+    "clearConfirm": "Ta bort alla {count} valda objekt?"
+  },
+  "detail": {
+    "label": "Detaljer för {id}",
+    "acquired": "Insamlad {date}",
+    "previewAlt": "Förhandsvisning av {id}",
+    "properties": "Egenskaper",
+    "assets": "Filer",
+    "needsSignIn": "Inloggning krävs",
+    "select": "Lägg till i valet",
+    "deselect": "Ta bort från valet",
+    "showRaw": "Visa rå JSON",
+    "hideRaw": "Dölj rå JSON"
+  },
   "card": {
     "browse": "Utforska",
     "docs": "Produktsida",

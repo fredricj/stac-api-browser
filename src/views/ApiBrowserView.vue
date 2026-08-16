@@ -1,32 +1,38 @@
 <script setup lang="ts">
 /**
- * One catalog's browse page: search panel on the left, map on the right.
+ * One catalog's browse page: search on the left, map and results on the right.
  *
- * The view owns the wiring between the two — the store holds the search, the
- * map holds the camera, and this decides when one should move the other.
- * Selection is still local; the basket store arrives with the results list in
- * the next phase.
+ * The view owns the wiring between the three — the search store holds the
+ * query, the selection store holds the basket, the map holds the camera — and
+ * decides when one should move another. Hover is mirrored between the map and
+ * the results list in both directions, so the two always agree about which
+ * item is under attention.
  */
 import { computed, onMounted, ref, useTemplateRef, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRegistryStore } from '@/stores/registryStore'
 import { useSearchStore } from '@/stores/searchStore'
+import { useSelectionStore } from '@/stores/selectionStore'
 import { useUrlState, type MapView } from '@/composables/useUrlState'
-import type { BBox2D } from '@/types/stac'
+import type { BBox2D, StacItem } from '@/types/stac'
 import StacMap from '@/components/map/StacMap.vue'
 import SearchPanel from '@/components/search/SearchPanel.vue'
+import ResultsList from '@/components/results/ResultsList.vue'
+import ItemDetailDrawer from '@/components/results/ItemDetailDrawer.vue'
+import SelectionBasket from '@/components/download/SelectionBasket.vue'
 
 const props = defineProps<{ apiId: string }>()
 
-const { t, n } = useI18n()
+const { t } = useI18n()
 const registry = useRegistryStore()
 const store = useSearchStore()
+const selection = useSelectionStore()
 
 const entry = computed(() => registry.byId(props.apiId))
 const mapRef = useTemplateRef<InstanceType<typeof StacMap>>('map')
 
-const selectedKeys = ref<Set<string>>(new Set())
 const hoveredKey = ref<string | null>(null)
+const detailItem = ref<StacItem | null>(null)
 
 /** Camera, mirrored into the URL so a shared link reopens the same view. */
 const view = ref<MapView | null>(null)
@@ -46,6 +52,9 @@ watch(
   entry,
   (next) => {
     store.configure(next ?? null)
+    // The basket is per-catalog and restored from this session's storage, so
+    // a refresh mid-selection is an inconvenience rather than lost work.
+    selection.configure(next?.id ?? null)
     if (!next) return
     void store.loadCollections()
     void store.loadQueryables()
@@ -80,11 +89,9 @@ function onLocate(bbox: BBox2D) {
   runSearch()
 }
 
-function toggle(key: string) {
-  const next = new Set(selectedKeys.value)
-  if (next.has(key)) next.delete(key)
-  else next.add(key)
-  selectedKeys.value = next
+/** The map and the list both toggle by key; the store resolves it to an item. */
+function toggleKey(key: string) {
+  selection.toggleKey(key, store.items)
 }
 </script>
 
@@ -111,54 +118,50 @@ function toggle(key: string) {
         <StacMap
           ref="map"
           :items="store.items"
-          :selected-keys="selectedKeys"
+          :selected-keys="selection.keys"
           :hovered-key="hoveredKey"
           :bbox="store.bbox"
           :busy="store.loading"
           :initial-view="initialView"
-          @toggle="toggle"
+          @toggle="toggleKey"
           @hover="hoveredKey = $event"
           @update:bbox="store.setBbox($event)"
           @search-area="onSearchArea"
           @view-change="view = $event"
         />
+      </div>
 
-        <footer class="map-foot">
-          <span class="count">
-            {{ t('map.selectedCount', { count: selectedKeys.size }) }}
-          </span>
+      <div class="results-column">
+        <SelectionBasket :items="store.items" :bbox="store.bbox" />
 
-          <!-- Never "page 3 of 57": these APIs report no total, so the only
-               honest statement is what is loaded and whether more remain. -->
-          <span v-if="store.hasSearched" class="loaded">
-            {{
-              t('search.results.loadedCount', { count: n(store.items.length) })
-            }}
-            <template v-if="store.isComplete">
-              · {{ t('search.results.allLoaded') }}
-            </template>
-          </span>
-
-          <button
-            v-if="store.hasMore"
-            type="button"
-            class="more"
-            :disabled="store.loadingMore"
-            @click="store.loadMore()"
-          >
-            {{
-              store.loadingMore
-                ? t('common.loading')
-                : t('search.results.loadMore')
-            }}
-          </button>
-
-          <span v-else-if="store.hitPageCap" class="capped">
-            {{ t('search.results.pageCap') }}
-          </span>
-        </footer>
+        <ResultsList
+          :items="store.items"
+          :selected-keys="selection.keys"
+          :hovered-key="hoveredKey"
+          :loading="store.loading"
+          :loading-more="store.loadingMore"
+          :has-searched="store.hasSearched"
+          :complete="store.isComplete"
+          :has-more="store.hasMore"
+          :hit-page-cap="store.hitPageCap"
+          @toggle="toggleKey"
+          @hover="hoveredKey = $event"
+          @open="detailItem = $event"
+          @load-more="store.loadMore()"
+        />
       </div>
     </div>
+
+    <ItemDetailDrawer
+      :item="detailItem"
+      :selected="
+        detailItem
+          ? selection.has(`${detailItem.collection}/${detailItem.id}`)
+          : false
+      "
+      @close="detailItem = null"
+      @toggle="detailItem && selection.toggle(detailItem)"
+    />
   </div>
 </template>
 
@@ -187,12 +190,14 @@ function toggle(key: string) {
   color: var(--c-accent);
 }
 
+/* Search, map, results. The map takes the slack because it is the thing
+   worth enlarging on a wide screen; the two panels stay legible-width. */
 .layout {
   display: grid;
-  grid-template-columns: var(--sidebar-w) 1fr;
+  grid-template-columns: var(--sidebar-w) minmax(0, 1fr) var(--sidebar-w);
   gap: var(--sp-4);
   flex: 1 1 auto;
-  min-height: 32rem;
+  min-height: 34rem;
 }
 
 .map-column {
@@ -203,42 +208,19 @@ function toggle(key: string) {
   min-height: 0;
 }
 
-.map-foot {
+.results-column {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
+  flex-direction: column;
   gap: var(--sp-3);
-  font-size: var(--fs-sm);
-  color: var(--c-text-muted);
+  min-width: 0;
+  min-height: 0;
 }
 
-.count {
-  color: var(--c-text);
-}
-
-.loaded {
-  font-variant-numeric: tabular-nums;
-}
-
-.more {
-  padding: var(--sp-1) var(--sp-3);
-  border: 1px solid var(--c-border-strong);
-  border-radius: var(--r-md);
-  background: var(--c-surface);
-  font-size: var(--fs-sm);
-  cursor: pointer;
-}
-.more:hover:not(:disabled) {
-  background: var(--c-surface-hover);
-}
-.more:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.capped {
-  font-size: var(--fs-xs);
-  color: var(--c-warning);
+/* The results list owns the leftover height so its own scroller, not the
+   page, is what moves. */
+.results-column > :last-child {
+  flex: 1 1 auto;
+  min-height: 12rem;
 }
 
 .not-found {
@@ -255,9 +237,24 @@ function toggle(key: string) {
   opacity: 0.85;
 }
 
+/* Below three columns, drop the results beside the map rather than shrinking
+   all three into uselessness. */
+@media (max-width: 80rem) {
+  .layout {
+    grid-template-columns: var(--sidebar-w) minmax(0, 1fr);
+  }
+  .results-column {
+    grid-column: 1 / -1;
+    max-height: 28rem;
+  }
+}
+
 @media (max-width: 52rem) {
   .layout {
     grid-template-columns: 1fr;
+  }
+  .map-column {
+    min-height: 24rem;
   }
 }
 </style>

@@ -200,6 +200,22 @@ export function formatBBox(bbox: BBox2D, precision = 5): string {
   return bbox.map((value) => value.toFixed(precision)).join(',')
 }
 
+/**
+ * True when two boxes share any ground at all.
+ *
+ * Used by *select all in the current box*: an item counts as inside when its
+ * footprint overlaps the search extent, not only when it is wholly contained
+ * — a tile straddling the edge is still one the user asked for.
+ *
+ * Touching edges do not count; a box drawn exactly along a tile boundary
+ * would otherwise sweep in the whole neighbouring row.
+ */
+export function bboxIntersects(a: BBox2D, b: BBox2D): boolean {
+  const [aWest, aSouth, aEast, aNorth] = normaliseBBox(a)
+  const [bWest, bSouth, bEast, bNorth] = normaliseBBox(b)
+  return aWest < bEast && bWest < aEast && aSouth < bNorth && bSouth < aNorth
+}
+
 /** True when two boxes are the same to within a rounding step. */
 export function bboxEquals(
   a: BBox2D | null,

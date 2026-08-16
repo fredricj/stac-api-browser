@@ -134,6 +134,39 @@
       "corsHint": "The catalog could not be reached. It may be down, or it may not allow requests from other sites."
     }
   },
+  "results": {
+    "label": "Search results",
+    "empty": "No items matched. Try a wider area, a longer date range, or fewer property filters.",
+    "selectItem": "Select {id}",
+    "openItem": "Open details for {id}"
+  },
+  "basket": {
+    "label": "Download selection",
+    "bulkLabel": "Bulk selection actions",
+    "title": "Selected",
+    "count": "{count} items",
+    "empty": "Nothing selected yet. Tick items in the list, or click footprints on the map.",
+    "estimated": "estimated — {count} items report no size",
+    "veryLarge": "This much data is better fetched with a download manager. An aria2c or curl script can be exported once downloads land.",
+    "outOfResults": "{count} of {total} are not in the current results.",
+    "selectAll": "Select all {count} loaded",
+    "selectInBox": "Select all in the box",
+    "invert": "Invert",
+    "clear": "Clear",
+    "clearConfirm": "Remove all {count} selected items?"
+  },
+  "detail": {
+    "label": "Details for {id}",
+    "acquired": "Acquired {date}",
+    "previewAlt": "Preview of {id}",
+    "properties": "Properties",
+    "assets": "Files",
+    "needsSignIn": "Sign-in needed",
+    "select": "Add to selection",
+    "deselect": "Remove from selection",
+    "showRaw": "Show raw JSON",
+    "hideRaw": "Hide raw JSON"
+  },
   "card": {
     "browse": "Browse",
     "docs": "Product page",
