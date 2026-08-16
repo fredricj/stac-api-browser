@@ -22,8 +22,12 @@ export const router = createRouter({
       redirect: { name: 'home' },
     },
   ],
-  scrollBehavior(_to, _from, savedPosition) {
-    return savedPosition ?? { top: 0 }
+  scrollBehavior(to, from, savedPosition) {
+    if (savedPosition) return savedPosition
+
+    if (to.path === from.path) return false
+
+    return { top: 0 }
   },
 })
 
