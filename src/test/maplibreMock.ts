@@ -54,6 +54,21 @@ export class FakeMap {
     return this
   }
 
+  /** Fires at most once, then detaches — as MapLibre's own `once` does. */
+  once(type: string, layerOrHandler: string | Handler, maybeHandler?: Handler) {
+    const layer =
+      typeof layerOrHandler === 'string' ? layerOrHandler : undefined
+    const handler =
+      typeof layerOrHandler === 'string' ? maybeHandler : layerOrHandler
+    if (!handler) return this
+
+    const wrapped: Handler = (...args) => {
+      this.off(type, layer ?? wrapped, layer ? wrapped : undefined)
+      handler(...args)
+    }
+    return layer ? this.on(type, layer, wrapped) : this.on(type, wrapped)
+  }
+
   off(type: string, layerOrHandler: string | Handler, maybeHandler?: Handler) {
     const layer =
       typeof layerOrHandler === 'string' ? layerOrHandler : undefined
@@ -108,6 +123,18 @@ export class FakeMap {
     return this.layers.get(id)
   }
 
+  /** Layout properties set per layer, e.g. `visibility`. */
+  layout = new Map<string, Record<string, unknown>>()
+
+  setLayoutProperty(id: string, name: string, value: unknown) {
+    this.layout.set(id, { ...this.layout.get(id), [name]: value })
+    return this
+  }
+
+  getLayoutProperty(id: string, name: string) {
+    return this.layout.get(id)?.[name]
+  }
+
   setFeatureState(
     target: { source: string; id: string },
     state: Record<string, unknown>,
@@ -148,6 +175,28 @@ export class FakeMap {
   fitBounds(bounds: unknown, options?: unknown) {
     this.fitBoundsCalls.push({ bounds, options })
     return this
+  }
+
+  /** Camera the fake reports; tests overwrite it to simulate panning. */
+  camera = { lon: 18, lat: 59, zoom: 8 }
+  /** Viewport `queryRenderedFeatures` would cover; drives *Search this area*. */
+  bounds = { west: 17.5, south: 58.8, east: 18.5, north: 59.4 }
+
+  getBounds() {
+    return {
+      getWest: () => this.bounds.west,
+      getSouth: () => this.bounds.south,
+      getEast: () => this.bounds.east,
+      getNorth: () => this.bounds.north,
+    }
+  }
+
+  getCenter() {
+    return { lng: this.camera.lon, lat: this.camera.lat }
+  }
+
+  getZoom() {
+    return this.camera.zoom
   }
 
   resize() {

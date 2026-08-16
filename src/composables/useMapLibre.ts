@@ -76,17 +76,6 @@ export function useMapLibre(options: UseMapLibreOptions): UseMapLibreReturn {
 
   let resizeObserver: ResizeObserver | null = null
 
-  /**
-   * True between calling `setStyle` and the replacement finishing.
-   *
-   * Load-bearing. `styledata` fires for *any* style mutation, including the
-   * `setData` that pushes new footprints, so treating every `styledata` as a
-   * new style would loop: setData -> styledata -> epoch++ -> setData -> …
-   * That loop freezes the tab outright. Gate the epoch on an actual swap so
-   * it advances exactly once per style: once on load, once per basemap change.
-   */
-  let awaitingStyleSwap = false
-
   function handleStyleLoad() {
     isReady.value = true
     styleEpoch.value++
@@ -110,13 +99,31 @@ export function useMapLibre(options: UseMapLibreOptions): UseMapLibreReturn {
     )
     instance.addControl(new ScaleControl({ unit: 'metric' }), 'bottom-left')
 
-    // `load` covers the first style; `styledata` only counts while a swap is
-    // outstanding (see `awaitingStyleSwap`).
-    instance.on('load', handleStyleLoad)
-    instance.on('styledata', () => {
-      if (!awaitingStyleSwap || !instance.isStyleLoaded()) return
-      awaitingStyleSwap = false
-      handleStyleLoad()
+    /*
+     * `style.load`, not `load`.
+     *
+     * `load` waits for the first complete render, which includes the basemap's
+     * tiles. When those are slow, rate-limited or blocked it never fires at
+     * all — and since every layer this app owns waits on readiness, the result
+     * was a map that showed no footprints and no search box, indefinitely,
+     * over a basemap problem it had nothing to do with.
+     *
+     * `style.load` fires as soon as the style is parsed, which is the moment
+     * layers can actually be added, and it fires again on every style swap —
+     * so it replaces the basemap-change bookkeeping too.
+     *
+     * Deliberately *not* `styledata`: that fires for any style mutation,
+     * including the `setData` that pushes new footprints, so keying the epoch
+     * to it loops setData -> styledata -> epoch++ -> setData and freezes the
+     * tab outright.
+     */
+    instance.on('style.load', handleStyleLoad)
+
+    // Belt and braces. `style.load` is the right signal and fires first, but
+    // if it were ever missed the map would sit blank forever with no way back
+    // — so `load` still marks it usable, and does nothing when it is already.
+    instance.once('load', () => {
+      if (!isReady.value) handleStyleLoad()
     })
 
     // The map lives in a flex/grid panel that resizes without the window
@@ -146,8 +153,8 @@ export function useMapLibre(options: UseMapLibreOptions): UseMapLibreReturn {
 
     // setStyle keeps the camera; `diff: false` forces a clean swap between
     // unrelated styles (vector -> raster) instead of a partial diff.
+    // `style.load` fires again when the replacement is ready.
     isReady.value = false
-    awaitingStyleSwap = true
     instance.setStyle(findBasemap(id).style as string | StyleSpecification, {
       diff: false,
     })

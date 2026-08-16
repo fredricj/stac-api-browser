@@ -38,7 +38,101 @@
       "title": "{count} items here"
     },
     "selectedCount": "{count} selected",
-    "fixtureNotice": "Showing recorded sample footprints. Live search arrives in the next phase."
+    "toolbar": {
+      "label": "Map search tools",
+      "searchArea": "Search this area",
+      "drawBox": "Draw a box",
+      "drawing": "Drawing…",
+      "drawHint": "Drag on the map to draw a search box, or click once for each corner. Drag a corner afterwards to resize it.",
+      "clearBox": "Clear box",
+      "drawUnavailable": "The drawing tool could not start. Click to try again, or type the bounds in the search panel."
+    }
+  },
+  "search": {
+    "panelLabel": "Search",
+    "search": "Search",
+    "searching": "Searching…",
+    "coords": {
+      "label": "Go to a coordinate",
+      "placeholder": "59.33, 18.07",
+      "placeholderSweref": "6580499, 673775 or 59.33, 18.07",
+      "crsLabel": "Coordinate system",
+      "crsAuto": "Detect automatically",
+      "crsWgs84": "WGS84 degrees (EPSG:4326)",
+      "crsSweref": "SWEREF99 TM (EPSG:3006)",
+      "format": {
+        "decimal": "Degrees",
+        "dms": "Degrees, minutes, seconds",
+        "bbox": "Bounding box"
+      },
+      "formatProjected": "Metres ({crs})",
+      "ambiguous": "Both values could be either latitude or longitude.",
+      "swap": "Swap them",
+      "notUnderstood": "Not recognised as a coordinate. Try “59.33, 18.07”, “6580499, 673775”, or four values for a box.",
+      "go": "Go here"
+    },
+    "bbox": {
+      "legend": "Search area",
+      "west": "West",
+      "south": "South",
+      "east": "East",
+      "north": "North",
+      "size": "{width} × {height} km · {area} km²",
+      "largeArea": "That is a large area. Expect a great many items, loaded a page at a time.",
+      "clear": "Clear area"
+    },
+    "dates": {
+      "legend": "Dates",
+      "from": "From",
+      "to": "To",
+      "openEndedHint": "Leave either side empty for an open-ended range.",
+      "reversed": "The start date is after the end date.",
+      "clear": "Clear dates"
+    },
+    "collections": {
+      "legend": "Collections",
+      "searchPlaceholder": "Filter by place or year",
+      "loading": "Loading collections…",
+      "matchCount": "{matching} of {total} shown",
+      "selectedCount": "{count} selected",
+      "selectMatching": "Select these {count}",
+      "clear": "Clear selection",
+      "noMatches": "No collections match.",
+      "undated": "No date"
+    },
+    "queryables": {
+      "legend": "Properties",
+      "loading": "Reading what this catalog can filter on…",
+      "min": "Smallest {field}",
+      "max": "Largest {field}",
+      "minShort": "min",
+      "maxShort": "max",
+      "textPlaceholder": "Exact value, or use * as a wildcard",
+      "reset": "Reset properties"
+    },
+    "chips": {
+      "legend": "Active filters",
+      "area": "Area",
+      "collections": "Collections",
+      "dates": "Dates",
+      "collectionCount": "{count} collections",
+      "remove": "Remove this filter",
+      "clearAll": "Clear all"
+    },
+    "guard": {
+      "warning": "This area is about {area} km². Searching it may load tens of thousands of items.",
+      "searchAnyway": "Search it anyway"
+    },
+    "results": {
+      "notYet": "Set an area or a filter, then search.",
+      "loadedCount": "{count} loaded",
+      "completeCount": "{count} found — all of them",
+      "allLoaded": "all loaded",
+      "loadMore": "Load more",
+      "pageCap": "Page limit reached. Narrow the search to see more.",
+      "failed": "The search failed.",
+      "corsHint": "The catalog could not be reached. It may be down, or it may not allow requests from other sites."
+    }
   },
   "card": {
     "browse": "Browse",

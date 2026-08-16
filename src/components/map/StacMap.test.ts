@@ -27,8 +27,9 @@ async function mountMap(props: Record<string, unknown> = {}) {
   })
   await flushPromises()
 
-  // The map only reports ready once its style has loaded.
-  lastMap().emit('load')
+  // The map reports ready once its style is parsed — not once the
+  // basemap's tiles have arrived.
+  lastMap().emit('style.load')
   await flushPromises()
   return wrapper
 }
@@ -66,8 +67,12 @@ describe('StacMap layers', () => {
     expect(map.sources.has(FOOTPRINT_SOURCE)).toBe(true)
     expect(map.getLayer(FOOTPRINT_FILL_LAYER)).toBeDefined()
     expect(map.getLayer(FOOTPRINT_LINE_LAYER)).toBeDefined()
-    // One source for every footprint, not one source per item.
-    expect(map.sources.size).toBe(1)
+    // One source carrying every footprint, not one source per item. The only
+    // other source is the search-extent overlay.
+    const footprintSources = [...map.sources.keys()].filter((id) =>
+      id.startsWith('stac-footprints'),
+    )
+    expect(footprintSources).toEqual([FOOTPRINT_SOURCE])
   })
 
   it('promotes the composite key so feature-state matches basket keys', async () => {
@@ -251,10 +256,10 @@ describe('StacMap basemap switching', () => {
     expect(wrapper.findAll('.option.is-active')).toHaveLength(1)
   })
 
-  it('ignores styledata that is not an actual style swap', async () => {
+  it('ignores styledata entirely', async () => {
     // Regression: `styledata` fires for any style mutation, including the
-    // `setData` that pushes footprints. Treating each one as a new style
-    // looped setData -> styledata -> setData and froze the browser tab.
+    // `setData` that pushes footprints. Keying readiness to it looped
+    // setData -> styledata -> setData and froze the browser tab.
     const wrapper = await mountMap()
     const map = lastMap()
     const before = map.setDataCalls
@@ -264,6 +269,27 @@ describe('StacMap basemap switching', () => {
 
     expect(map.setDataCalls).toBe(before)
     expect(wrapper.find('.map-root').exists()).toBe(true)
+  })
+
+  it('becomes ready without waiting for the basemap tiles', async () => {
+    // Regression: readiness hung off `load`, which waits for the first full
+    // render. A slow or blocked basemap meant it never fired, and the app's
+    // own layers — footprints and the search box — never appeared at all.
+    const wrapper = mount(StacMap, {
+      props: { items, selectedKeys: new Set<string>() },
+      global: { plugins: [i18n] },
+      attachTo: document.body,
+    })
+    await flushPromises()
+
+    const map = lastMap()
+    // `style.load` only: no `load`, as when tiles never arrive.
+    map.emit('style.load')
+    await flushPromises()
+
+    expect(map.sources.has(FOOTPRINT_SOURCE)).toBe(true)
+    expect(map.getLayer(FOOTPRINT_FILL_LAYER)).toBeDefined()
+    wrapper.unmount()
   })
 
   it('re-adds the footprint layers after a style swap wipes them', async () => {
@@ -279,7 +305,7 @@ describe('StacMap basemap switching', () => {
     expect(map.sources.has(FOOTPRINT_SOURCE)).toBe(false)
 
     // ...and the new style loading must bring it all back, selection included.
-    map.emit('styledata')
+    map.emit('style.load')
     await flushPromises()
 
     expect(map.sources.has(FOOTPRINT_SOURCE)).toBe(true)
@@ -287,5 +313,77 @@ describe('StacMap basemap switching', () => {
     expect(
       map.getFeatureState({ source: FOOTPRINT_SOURCE, id: 'coll/a' }).selected,
     ).toBe(true)
+  })
+})
+
+describe('StacMap search controls', () => {
+  it('turns the current viewport into a bbox for "Search this area"', async () => {
+    const wrapper = await mountMap()
+    const map = lastMap()
+    map.bounds = { west: 17.5, south: 58.8, east: 18.5, north: 59.4 }
+
+    const button = wrapper
+      .findAll('.toolbar .tool')
+      .find((tool) => tool.text() === 'Search this area')!
+    await button.trigger('click')
+
+    expect(wrapper.emitted('searchArea')?.[0]?.[0]).toEqual([
+      17.5, 58.8, 18.5, 59.4,
+    ])
+    // The drawn box follows the viewport, so the panel shows what was searched.
+    expect(wrapper.emitted('update:bbox')?.at(-1)?.[0]).toEqual([
+      17.5, 58.8, 18.5, 59.4,
+    ])
+  })
+
+  it('reports the camera on moveend so the URL can carry it', async () => {
+    const wrapper = await mountMap()
+    const map = lastMap()
+    map.camera = { lon: 18.07, lat: 59.33, zoom: 12 }
+
+    map.emit('moveend')
+    await flushPromises()
+
+    expect(wrapper.emitted('viewChange')?.at(-1)?.[0]).toEqual({
+      lon: 18.07,
+      lat: 59.33,
+      zoom: 12,
+    })
+  })
+
+  it('fits to a bbox when a coordinate search asks it to', async () => {
+    const wrapper = await mountMap()
+    const map = lastMap()
+
+    wrapper.vm.fitToBbox([17.9, 59.2, 18.2, 59.4])
+
+    expect(map.fitBoundsCalls).not.toHaveLength(0)
+  })
+
+  it('stops refitting once the user has panned themselves', async () => {
+    const wrapper = await mountMap()
+    const map = lastMap()
+    const before = map.fitBoundsCalls.length
+
+    // Only user gestures carry an originalEvent; our own fitBounds does not.
+    map.emit('movestart', { originalEvent: new Event('mousedown') })
+    await wrapper.setProps({ items: items.slice(0, 2) })
+    await flushPromises()
+
+    expect(map.fitBoundsCalls).toHaveLength(before)
+  })
+
+  it('refits after an explicit search re-arms the auto-fit', async () => {
+    const wrapper = await mountMap()
+    const map = lastMap()
+
+    map.emit('movestart', { originalEvent: new Event('mousedown') })
+    wrapper.vm.resetAutoFit()
+    const before = map.fitBoundsCalls.length
+
+    await wrapper.setProps({ items: items.slice(0, 2) })
+    await flushPromises()
+
+    expect(map.fitBoundsCalls.length).toBeGreaterThan(before)
   })
 })

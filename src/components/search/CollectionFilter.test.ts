@@ -1,0 +1,139 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { flushPromises, mount } from '@vue/test-utils'
+import i18n from '@/i18n'
+import CollectionFilter from '@/components/search/CollectionFilter.vue'
+import type { StacCollection } from '@/types/stac'
+import collectionsFixture from '@/services/__fixtures__/collections-bild.json'
+
+const liveCollections = (
+  collectionsFixture as unknown as { collections: StacCollection[] }
+).collections
+
+function mountFilter(props: Record<string, unknown> = {}) {
+  return mount(CollectionFilter, {
+    props: { collections: liveCollections, selected: [], ...props },
+    global: { plugins: [i18n] },
+    attachTo: document.body,
+  })
+}
+
+/** The search box debounces; advance past it and let the DOM settle. */
+async function settle() {
+  await vi.advanceTimersByTimeAsync(200)
+  await flushPromises()
+}
+
+/**
+ * jsdom lays nothing out, so every element measures 0×0 and the virtualiser
+ * concludes there is no viewport to fill. Give it a scroll port with real
+ * dimensions; without this it renders no rows at all and the tests below
+ * would pass vacuously.
+ */
+const SCROLLER_HEIGHT = 224
+
+beforeEach(() => {
+  vi.useFakeTimers()
+  i18n.global.locale.value = 'en'
+  document.body.innerHTML = ''
+
+  vi.spyOn(Element.prototype, 'getBoundingClientRect').mockReturnValue({
+    x: 0,
+    y: 0,
+    top: 0,
+    left: 0,
+    right: 320,
+    bottom: SCROLLER_HEIGHT,
+    width: 320,
+    height: SCROLLER_HEIGHT,
+    toJSON: () => ({}),
+  } as DOMRect)
+})
+
+afterEach(() => {
+  vi.restoreAllMocks()
+})
+
+describe('virtualisation', () => {
+  it('renders a handful of rows, not all 731', async () => {
+    // The whole reason this list is virtualised: 731 collections is several
+    // thousand DOM nodes, and every keystroke would re-render them.
+    const wrapper = mountFilter()
+    await flushPromises()
+
+    const rendered = wrapper.findAll('.row').length
+    expect(liveCollections).toHaveLength(731)
+    expect(rendered).toBeGreaterThan(0)
+    expect(rendered).toBeLessThan(100)
+  })
+
+  it('reports the total it is filtering over', async () => {
+    const wrapper = mountFilter()
+    await flushPromises()
+    expect(wrapper.find('.status').text()).toContain('731')
+  })
+})
+
+describe('searching', () => {
+  it('narrows to matching collections', async () => {
+    const wrapper = mountFilter()
+    await wrapper.find('input[type="search"]').setValue('arvidsjaur')
+    await settle()
+
+    const status = wrapper.find('.status').text()
+    expect(status).toContain('of 731')
+    // Far fewer than the whole catalog, but not none.
+    expect(status).not.toContain('731 of 731')
+  })
+
+  it('shows an empty state rather than a blank box', async () => {
+    const wrapper = mountFilter()
+    await wrapper.find('input[type="search"]').setValue('zzzznothing')
+    await settle()
+
+    expect(wrapper.find('.empty').exists()).toBe(true)
+  })
+})
+
+describe('selection', () => {
+  it('emits the id when a collection is checked', async () => {
+    const wrapper = mountFilter()
+    await flushPromises()
+
+    await wrapper.find('.option input[type="checkbox"]').setValue(true)
+
+    const emitted = wrapper.emitted('update:selected')?.[0]?.[0] as string[]
+    expect(emitted).toHaveLength(1)
+  })
+
+  it('bulk-selects everything the query matches', async () => {
+    const wrapper = mountFilter()
+    await wrapper.find('input[type="search"]').setValue('arvidsjaur')
+    await settle()
+
+    await wrapper.findAll('.bulk .link')[0].trigger('click')
+
+    const emitted = wrapper.emitted('update:selected')?.at(-1)?.[0] as string[]
+    expect(emitted.length).toBeGreaterThan(0)
+    expect(emitted.every((id) => id.includes('arvidsjaur'))).toBe(true)
+  })
+
+  it('bulk-selects only what is visible, not the whole catalog', async () => {
+    const wrapper = mountFilter()
+    await wrapper.find('input[type="search"]').setValue('arvidsjaur')
+    await settle()
+
+    await wrapper.findAll('.bulk .link')[0].trigger('click')
+
+    const emitted = wrapper.emitted('update:selected')?.at(-1)?.[0] as string[]
+    expect(emitted.length).toBeLessThan(liveCollections.length)
+  })
+
+  it('clears the selection', async () => {
+    const wrapper = mountFilter({ selected: ['orto-o2-2025'] })
+    await flushPromises()
+
+    await wrapper.findAll('.bulk .link')[1].trigger('click')
+
+    expect(wrapper.emitted('update:selected')?.at(-1)?.[0]).toEqual([])
+  })
+})

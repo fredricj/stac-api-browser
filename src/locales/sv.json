@@ -38,7 +38,101 @@
       "title": "{count} objekt här"
     },
     "selectedCount": "{count} valda",
-    "fixtureNotice": "Visar inspelade exempelrutor. Live-sökning kommer i nästa fas."
+    "toolbar": {
+      "label": "Sökverktyg för kartan",
+      "searchArea": "Sök i detta område",
+      "drawBox": "Rita en ruta",
+      "drawing": "Ritar…",
+      "drawHint": "Dra på kartan för att rita en sökruta, eller klicka en gång per hörn. Dra sedan i ett hörn för att ändra storlek.",
+      "clearBox": "Ta bort rutan",
+      "drawUnavailable": "Ritverktyget kunde inte startas. Klicka för att försöka igen, eller skriv in koordinaterna i sökpanelen."
+    }
+  },
+  "search": {
+    "panelLabel": "Sök",
+    "search": "Sök",
+    "searching": "Söker…",
+    "coords": {
+      "label": "Gå till en koordinat",
+      "placeholder": "59.33, 18.07",
+      "placeholderSweref": "6580499, 673775 eller 59.33, 18.07",
+      "crsLabel": "Koordinatsystem",
+      "crsAuto": "Känn av automatiskt",
+      "crsWgs84": "WGS84-grader (EPSG:4326)",
+      "crsSweref": "SWEREF99 TM (EPSG:3006)",
+      "format": {
+        "decimal": "Grader",
+        "dms": "Grader, minuter, sekunder",
+        "bbox": "Omslutande rektangel"
+      },
+      "formatProjected": "Meter ({crs})",
+      "ambiguous": "Båda värdena kan vara antingen latitud eller longitud.",
+      "swap": "Byt plats på dem",
+      "notUnderstood": "Uppfattas inte som en koordinat. Testa ”59.33, 18.07”, ”6580499, 673775”, eller fyra värden för en rektangel.",
+      "go": "Gå hit"
+    },
+    "bbox": {
+      "legend": "Sökområde",
+      "west": "Väst",
+      "south": "Syd",
+      "east": "Öst",
+      "north": "Nord",
+      "size": "{width} × {height} km · {area} km²",
+      "largeArea": "Det är ett stort område. Räkna med väldigt många objekt, en sida i taget.",
+      "clear": "Ta bort området"
+    },
+    "dates": {
+      "legend": "Datum",
+      "from": "Från",
+      "to": "Till",
+      "openEndedHint": "Lämna en sida tom för ett öppet intervall.",
+      "reversed": "Startdatumet ligger efter slutdatumet.",
+      "clear": "Ta bort datum"
+    },
+    "collections": {
+      "legend": "Samlingar",
+      "searchPlaceholder": "Filtrera på ort eller år",
+      "loading": "Hämtar samlingar…",
+      "matchCount": "{matching} av {total} visas",
+      "selectedCount": "{count} valda",
+      "selectMatching": "Välj dessa {count}",
+      "clear": "Rensa valet",
+      "noMatches": "Inga samlingar matchar.",
+      "undated": "Utan datum"
+    },
+    "queryables": {
+      "legend": "Egenskaper",
+      "loading": "Läser vad katalogen kan filtrera på…",
+      "min": "Minsta {field}",
+      "max": "Största {field}",
+      "minShort": "min",
+      "maxShort": "max",
+      "textPlaceholder": "Exakt värde, eller använd * som jokertecken",
+      "reset": "Återställ egenskaper"
+    },
+    "chips": {
+      "legend": "Aktiva filter",
+      "area": "Område",
+      "collections": "Samlingar",
+      "dates": "Datum",
+      "collectionCount": "{count} samlingar",
+      "remove": "Ta bort filtret",
+      "clearAll": "Rensa alla"
+    },
+    "guard": {
+      "warning": "Området är cirka {area} km². En sökning kan ge tiotusentals objekt.",
+      "searchAnyway": "Sök ändå"
+    },
+    "results": {
+      "notYet": "Ange ett område eller ett filter och sök sedan.",
+      "loadedCount": "{count} hämtade",
+      "completeCount": "{count} hittade — allihop",
+      "allLoaded": "alla hämtade",
+      "loadMore": "Hämta fler",
+      "pageCap": "Sidgränsen är nådd. Avgränsa sökningen för att se fler.",
+      "failed": "Sökningen misslyckades.",
+      "corsHint": "Katalogen kunde inte nås. Den kan vara nere, eller inte tillåta anrop från andra webbplatser."
+    }
   },
   "card": {
     "browse": "Utforska",

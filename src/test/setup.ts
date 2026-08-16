@@ -44,3 +44,51 @@ for (const name of ['localStorage', 'sessionStorage'] as const) {
     })
   }
 }
+
+/**
+ * jsdom has no `ResizeObserver`.
+ *
+ * Anything that sizes itself to its container goes dormant without one — the
+ * virtualised collection list in particular concludes it has a zero-height
+ * viewport and renders no rows at all, which would make its tests pass
+ * vacuously. This stub reports the element's current rect once on `observe`,
+ * which is enough for code that only needs an initial measurement. Tests that
+ * care about a specific size stub `getBoundingClientRect` alongside it.
+ */
+if (typeof globalThis.ResizeObserver !== 'function') {
+  class TestResizeObserver implements ResizeObserver {
+    // A plain field, not a parameter property: the project builds with
+    // `erasableSyntaxOnly`, which rules out TypeScript-only constructor sugar.
+    callback: ResizeObserverCallback
+
+    constructor(callback: ResizeObserverCallback) {
+      this.callback = callback
+    }
+
+    observe(target: Element): void {
+      const rect = target.getBoundingClientRect()
+      const size = { inlineSize: rect.width, blockSize: rect.height }
+      this.callback(
+        [
+          {
+            target,
+            contentRect: rect,
+            borderBoxSize: [size],
+            contentBoxSize: [size],
+            devicePixelContentBoxSize: [size],
+          } as unknown as ResizeObserverEntry,
+        ],
+        this,
+      )
+    }
+
+    unobserve(): void {}
+    disconnect(): void {}
+  }
+
+  Object.defineProperty(globalThis, 'ResizeObserver', {
+    value: TestResizeObserver,
+    configurable: true,
+    writable: true,
+  })
+}

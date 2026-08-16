@@ -308,6 +308,10 @@ export class StacClient {
     return this.request<StacCollection>(url, {}, signal)
   }
 
+  getJson<T>(path: string, signal?: AbortSignal): Promise<T> {
+    return this.request<T>(joinUrl(this.baseUrl, path), {}, signal)
+  }
+
   /**
    * Item search. Uses GET for the simple bbox/collections/datetime case so
    * requests stay cacheable and debuggable, and POST as soon as the query
