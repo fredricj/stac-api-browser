@@ -3,8 +3,8 @@ import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import i18n from '@/i18n'
 import SelectionBasket from '@/components/download/SelectionBasket.vue'
+import DownloadDialog from '@/components/download/DownloadDialog.vue'
 import { useSelectionStore } from '@/stores/selectionStore'
-import { useAuthStore } from '@/stores/authStore'
 import type { StacItem } from '@/types/stac'
 import page1 from '@/services/__fixtures__/search-get-page1.json'
 
@@ -176,84 +176,22 @@ describe('bulk actions', () => {
   })
 })
 
-describe('sign-in', () => {
-  const entry = {
-    id: 'lantmateriet-bild',
-    title: 'Ortofoto',
-    url: 'https://api.lantmateriet.se/stac-bild/v1/',
-    assetHost: 'dl1.lantmateriet.se',
-    auth: 'basic' as const,
-    docsUrl: 'https://geotorget.lantmateriet.se/product',
-  }
-
-  it('stays out of the way for a catalog that needs no sign-in', () => {
-    const wrapper = mountBasket({ entry: { ...entry, auth: 'none' as const } })
-    expect(wrapper.find('.auth').exists()).toBe(false)
-  })
-
-  it('offers a sign-in for a catalog whose assets are protected', () => {
-    const wrapper = mountBasket({ entry })
-
-    expect(wrapper.find('.auth').text()).toContain('dl1.lantmateriet.se')
-    expect(wrapper.text()).toContain('Sign in')
-  })
-
-  it('scopes to the host of a real selected asset, not the catalog host', () => {
-    // Assets live on a different origin than the catalog on every built-in
-    // entry, so the credentials must be filed under the host that asks.
-    const store = useSelectionStore()
-    store.configure('cat')
-    store.add([
-      {
-        ...sized('a', 1),
-        assets: {
-          data: { href: 'https://elsewhere.example/a.tif', roles: ['data'] },
-        },
-      },
-    ])
+describe('download dialog', () => {
+  // Sign-in now lives inside the download dialog itself, scoped to whichever
+  // tier is actually chosen there — see DownloadDialog.test.ts. The basket's
+  // only job is to hand the dialog the catalog it needs to know that.
+  it('passes the catalog through to the download dialog', () => {
+    const entry = {
+      id: 'lantmateriet-bild',
+      title: 'Ortofoto',
+      url: 'https://api.lantmateriet.se/stac-bild/v1/',
+      assetHost: 'dl1.lantmateriet.se',
+      auth: 'basic' as const,
+      docsUrl: 'https://geotorget.lantmateriet.se/product',
+    }
 
     const wrapper = mountBasket({ entry })
 
-    expect(wrapper.find('.auth').text()).toContain('elsewhere.example')
-  })
-
-  it('shows who is signed in and how long it lasts', () => {
-    const auth = useAuthStore()
-    auth.set('dl1.lantmateriet.se', { username: 'anna', password: 'x' })
-
-    const wrapper = mountBasket({ entry })
-
-    expect(wrapper.find('.auth-ok').text()).toContain('anna')
-    expect(wrapper.find('.auth-scope').text()).toContain('this page load only')
-  })
-
-  it('says when credentials will outlive a refresh', () => {
-    const auth = useAuthStore()
-    auth.set(
-      'dl1.lantmateriet.se',
-      { username: 'anna', password: 'x' },
-      'session',
-    )
-
-    expect(mountBasket({ entry }).find('.auth-scope').text()).toContain(
-      'remembered for this tab',
-    )
-  })
-
-  it('signs out without touching the basket', async () => {
-    const auth = useAuthStore()
-    auth.set('dl1.lantmateriet.se', { username: 'anna', password: 'x' })
-    const selectionStore = useSelectionStore()
-    selectionStore.configure('cat')
-    selectionStore.add(items)
-
-    const wrapper = mountBasket({ entry })
-    const signOut = wrapper
-      .findAll('.auth .link')
-      .find((button) => button.text() === 'Sign out')!
-    await signOut.trigger('click')
-
-    expect(auth.has('dl1.lantmateriet.se')).toBe(false)
-    expect(selectionStore.count).toBe(items.length)
+    expect(wrapper.findComponent(DownloadDialog).props('entry')).toEqual(entry)
   })
 })

@@ -204,7 +204,6 @@
     "sizeEstimated": "(part of this is estimated)",
     "tierLegend": "How to download",
     "tooBigForBrowser": "At {size} this is a job for a download manager, not a browser tab. Export a list below and let aria2c fetch it — it resumes, runs in parallel, and survives closing your laptop.",
-    "signInFirst": "Sign in above before starting; these files need a Geotorget account.",
     "chooseFolder": "Choose a folder…",
     "startSequential": "Start downloading",
     "running": "Downloading…",
@@ -224,6 +223,17 @@
       "manifest": {
         "name": "Export a list for a download manager",
         "hint": "The right answer for a large job, and always available."
+      }
+    },
+    "sequential": {
+      "modeLegend": "How to fetch them",
+      "auto": {
+        "name": "Download automatically",
+        "hint": "Fetches each file with your Geotorget sign-in, through this app."
+      },
+      "links": {
+        "name": "Open the files as links",
+        "hint": "No sign-in through this app — click a link and your browser asks for the Geotorget username and password itself, the first time a file needs it."
       }
     },
     "manifest": {

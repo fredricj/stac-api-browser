@@ -11,13 +11,10 @@
 import { computed, useTemplateRef } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useSelectionStore } from '@/stores/selectionStore'
-import { useAuthStore } from '@/stores/authStore'
-import { assetHostOf } from '@/services/auth'
 import type { StacApiEntry } from '@/types/registry'
 import type { StacItem } from '@/types/stac'
 import { itemKey } from '@/types/stac'
 import { formatBytes, formatCount } from '@/utils/format'
-import CredentialsDialog from '@/components/download/CredentialsDialog.vue'
 import DownloadDialog from '@/components/download/DownloadDialog.vue'
 
 const props = defineProps<{
@@ -31,10 +28,7 @@ const props = defineProps<{
 
 const { t, locale } = useI18n()
 const selection = useSelectionStore()
-const auth = useAuthStore()
 
-const credentialsDialog =
-  useTemplateRef<InstanceType<typeof CredentialsDialog>>('credentialsDialog')
 const downloadDialog =
   useTemplateRef<InstanceType<typeof DownloadDialog>>('downloadDialog')
 
@@ -58,39 +52,6 @@ function confirmClear() {
   if (window.confirm(t('basket.clearConfirm', { count: selection.count }))) {
     selection.clear()
   }
-}
-
-/* ---------------- Credentials ---------------- */
-
-/** True when this catalog's assets are behind a sign-in. */
-const needsAuth = computed(() => props.entry?.auth === 'basic')
-
-/**
- * The host to scope credentials to.
- *
- * Taken from a real selected asset where possible, since that is the host that
- * will actually be asked for them; the registry's `assetHost` is the fallback
- * for a basket that is still empty.
- */
-const assetHost = computed(() => {
-  const fromSelection = selection.items.find((item) => item.href)?.href
-  return (
-    (fromSelection ? assetHostOf(fromSelection) : null) ??
-    props.entry?.assetHost ??
-    null
-  )
-})
-
-/** A real asset to verify credentials against, or null if nothing is selected. */
-const sampleAssetUrl = computed(
-  () => selection.items.find((item) => item.href)?.href ?? null,
-)
-
-const signedInAs = computed(() => auth.usernameFor(assetHost.value))
-const remembered = computed(() => auth.scopeFor(assetHost.value) === 'session')
-
-function signOut() {
-  if (assetHost.value) auth.clear(assetHost.value)
 }
 </script>
 
@@ -175,44 +136,12 @@ function signOut() {
       </button>
     </div>
 
-    <!-- Sign-in lives here because this is where downloading starts. Browsing,
-         searching and previews never reach it: nothing above this line has
-         asked the user for anything. -->
-    <div v-if="needsAuth && assetHost" class="auth">
-      <template v-if="signedInAs">
-        <p class="auth-state">
-          <span class="auth-ok">{{
-            t('auth.signedInAs', { username: signedInAs })
-          }}</span>
-          <span class="auth-scope">
-            {{ remembered ? t('auth.scopeSession') : t('auth.scopeMemory') }}
-          </span>
-        </p>
-        <div class="auth-actions">
-          <button type="button" class="link" @click="credentialsDialog?.open()">
-            {{ t('auth.change') }}
-          </button>
-          <button type="button" class="link link--danger" @click="signOut">
-            {{ t('auth.signOut') }}
-          </button>
-        </div>
-      </template>
-
-      <template v-else>
-        <p class="auth-state">{{ t('auth.needed', { host: assetHost }) }}</p>
-        <button type="button" class="link" @click="credentialsDialog?.open()">
-          {{ t('auth.signIn') }}
-        </button>
-      </template>
-
-      <CredentialsDialog
-        ref="credentialsDialog"
-        :host="assetHost"
-        :sample-asset-url="sampleAssetUrl"
-        :docs-url="entry?.docsUrl"
-      />
-    </div>
-    <DownloadDialog ref="downloadDialog" />
+    <!-- Sign-in, when it is needed at all, lives inside the download dialog
+         now: whether it is needed depends on which download route is chosen
+         there (a download manager and the "open as links" route never send a
+         password through this app), so the dialog is the only place that
+         actually knows. -->
+    <DownloadDialog ref="downloadDialog" :entry="entry" />
   </section>
 </template>
 
@@ -329,36 +258,5 @@ function signOut() {
 .download:disabled {
   opacity: 0.5;
   cursor: not-allowed;
-}
-
-.auth {
-  display: flex;
-  flex-direction: column;
-  gap: var(--sp-1);
-  padding-top: var(--sp-2);
-  border-top: 1px solid var(--c-border);
-}
-
-.auth-state {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: var(--sp-2);
-  font-size: var(--fs-xs);
-  color: var(--c-text-muted);
-}
-
-.auth-ok {
-  color: var(--c-success);
-  font-weight: 600;
-}
-
-.auth-scope {
-  color: var(--c-text-faint);
-}
-
-.auth-actions {
-  display: flex;
-  gap: var(--sp-3);
 }
 </style>

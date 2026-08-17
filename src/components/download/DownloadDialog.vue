@@ -26,8 +26,13 @@ import {
   type DownloadTier,
 } from '@/services/downloadPreference'
 import { formatBytes } from '@/utils/format'
+import type { StacApiEntry } from '@/types/registry'
+import CredentialsDialog from '@/components/download/CredentialsDialog.vue'
 import DownloadProgressPanel from '@/components/download/DownloadProgressPanel.vue'
 import ManifestExportPanel from '@/components/download/ManifestExportPanel.vue'
+
+/** One file at a time, either sub-way. */
+type SequentialMode = 'auto' | 'links'
 
 /**
  * Above this, a browser is the wrong tool and the dialog recommends aria2c.
@@ -35,11 +40,18 @@ import ManifestExportPanel from '@/components/download/ManifestExportPanel.vue'
  */
 const MANIFEST_THRESHOLD_BYTES = 20e9
 
+const props = defineProps<{
+  /** For the auth type and the Geotorget product link a 403 points to. */
+  entry: StacApiEntry | null
+}>()
+
 const { t, locale } = useI18n()
 const selection = useSelectionStore()
 const auth = useAuthStore()
 
 const dialog = useTemplateRef<HTMLDialogElement>('dialog')
+const credentialsDialog =
+  useTemplateRef<InstanceType<typeof CredentialsDialog>>('credentialsDialog')
 
 const canStreamToFolder = isDirectoryPickerSupported()
 
@@ -47,6 +59,14 @@ const snapshot = ref<QueueSnapshot | null>(null)
 const queue = shallowRef<DownloadQueue | null>(null)
 const busy = ref(false)
 const problem = ref<string | null>(null)
+
+/**
+ * *Save one at a time* splits further: fetch each file through the app, or
+ * just list the raw links and let the browser's own Basic-auth prompt handle
+ * the sign-in. Defaults to the former — the existing behaviour — because it
+ * is the one that actually saves the file without extra clicks.
+ */
+const sequentialMode = ref<SequentialMode>('auto')
 
 const size = computed(() => selection.size)
 const sizeLabel = computed(() => formatBytes(size.value.bytes, locale.value))
@@ -80,17 +100,45 @@ const assetHost = computed(() => {
 })
 
 const credentials = computed(() => auth.get(assetHost.value))
-const missingCredentials = computed(
-  () => credentials.value === null && selection.items.some((item) => item.href),
+const downloadable = computed(() => selection.items.filter((item) => item.href))
+const sampleAssetUrl = computed(() => downloadable.value[0]?.href ?? null)
+
+/* ---------------- Credentials ---------------- */
+
+/** True when this catalog's assets are behind a sign-in. */
+const needsAuth = computed(() => props.entry?.auth === 'basic')
+
+/**
+ * Only *save to a folder* and *save one at a time, automatically* fetch
+ * anything through this app — a download manager reads the manifest's own
+ * `${STAC_USER}`/`${STAC_PASSWORD}` placeholders from the shell environment
+ * it runs in, and the *links* sub-mode hands the sign-in to the browser's own
+ * prompt. Asking for credentials the chosen route will never use is exactly
+ * the confusion this gates against.
+ */
+const needsCredentials = computed(
+  () =>
+    needsAuth.value &&
+    assetHost.value !== null &&
+    (tier.value === 'folder' ||
+      (tier.value === 'sequential' && sequentialMode.value === 'auto')),
 )
 
-const downloadable = computed(() => selection.items.filter((item) => item.href))
+const signedInAs = computed(() => auth.usernameFor(assetHost.value))
+const rememberedCredentials = computed(
+  () => auth.scopeFor(assetHost.value) === 'session',
+)
+
+function signOut() {
+  if (assetHost.value) auth.clear(assetHost.value)
+}
 
 function open() {
   problem.value = null
   snapshot.value = null
   queue.value = null
   busy.value = false
+  sequentialMode.value = 'auto'
   tier.value = resolveInitialTier({
     remembered: loadPreferredTier(),
     canStreamToFolder,
@@ -203,10 +251,6 @@ defineExpose({ open, close })
         {{ t('download.tooBigForBrowser', { size: sizeLabel }) }}
       </p>
 
-      <p v-if="missingCredentials" class="warn">
-        {{ t('download.signInFirst') }}
-      </p>
-
       <!-- Progress replaces the chooser once a run is under way. -->
       <template v-if="snapshot">
         <DownloadProgressPanel
@@ -261,6 +305,60 @@ defineExpose({ open, close })
             </span>
           </label>
 
+          <!-- Nested inside the option it belongs to, not tacked on after
+               every tier — the sub-choice only makes sense once "save one at
+               a time" is the thing selected. -->
+          <template v-if="tier === 'sequential'">
+            <fieldset class="modes">
+              <legend class="sr-only">
+                {{ t('download.sequential.modeLegend') }}
+              </legend>
+
+              <label class="mode">
+                <input v-model="sequentialMode" type="radio" value="auto" />
+                <span class="mode-text">
+                  <span class="mode-name">
+                    {{ t('download.sequential.auto.name') }}
+                  </span>
+                  <span class="mode-hint">
+                    {{ t('download.sequential.auto.hint') }}
+                  </span>
+                </span>
+              </label>
+
+              <label class="mode">
+                <input v-model="sequentialMode" type="radio" value="links" />
+                <span class="mode-text">
+                  <span class="mode-name">
+                    {{ t('download.sequential.links.name') }}
+                  </span>
+                  <span class="mode-hint">
+                    {{ t('download.sequential.links.hint') }}
+                  </span>
+                </span>
+              </label>
+            </fieldset>
+
+            <p v-if="sequentialMode === 'auto'" class="warn indented">
+              {{ t('download.sequentialWarning') }}
+            </p>
+
+            <!-- No fetch of ours touches these — the browser navigates to the
+                 asset directly, so its own Basic-auth prompt is what asks for
+                 the password, and the app never sees it. -->
+            <ul
+              v-else
+              class="link-list"
+              :aria-label="t('download.sequential.links.name')"
+            >
+              <li v-for="item in downloadable" :key="item.key">
+                <a :href="item.href!" target="_blank" rel="noopener noreferrer">
+                  {{ safeFilename(item.href!, item.id) }}
+                </a>
+              </li>
+            </ul>
+          </template>
+
           <label class="tier">
             <input
               v-model="tier"
@@ -277,13 +375,65 @@ defineExpose({ open, close })
               </span>
             </span>
           </label>
+
+          <!-- Same reasoning: the export panel belongs under the option that
+               reveals it. -->
+          <ManifestExportPanel v-if="tier === 'manifest'" class="indented" />
         </fieldset>
 
-        <ManifestExportPanel v-if="tier === 'manifest'" />
+        <!-- Sign-in lives here, scoped to the tier that is actually chosen:
+             a download manager reads credentials from the shell environment
+             it runs in, and the *links* sub-mode hands the prompt to the
+             browser itself, so asking for a password neither route will use
+             would only confuse. -->
+        <div v-if="needsCredentials" class="auth">
+          <template v-if="signedInAs">
+            <p class="auth-state">
+              <span class="auth-ok">
+                {{ t('auth.signedInAs', { username: signedInAs }) }}
+              </span>
+              <span class="auth-scope">
+                {{
+                  rememberedCredentials
+                    ? t('auth.scopeSession')
+                    : t('auth.scopeMemory')
+                }}
+              </span>
+            </p>
+            <div class="auth-actions">
+              <button
+                type="button"
+                class="link"
+                @click="credentialsDialog?.open()"
+              >
+                {{ t('auth.change') }}
+              </button>
+              <button type="button" class="link link--danger" @click="signOut">
+                {{ t('auth.signOut') }}
+              </button>
+            </div>
+          </template>
 
-        <p v-if="tier === 'sequential'" class="warn">
-          {{ t('download.sequentialWarning') }}
-        </p>
+          <template v-else>
+            <p class="auth-state">
+              {{ t('auth.needed', { host: assetHost }) }}
+            </p>
+            <button
+              type="button"
+              class="link"
+              @click="credentialsDialog?.open()"
+            >
+              {{ t('auth.signIn') }}
+            </button>
+          </template>
+        </div>
+        <CredentialsDialog
+          v-if="needsAuth && assetHost"
+          ref="credentialsDialog"
+          :host="assetHost"
+          :sample-asset-url="sampleAssetUrl"
+          :docs-url="entry?.docsUrl"
+        />
       </template>
 
       <p v-if="problem" class="error" role="alert">{{ problem }}</p>
@@ -304,7 +454,7 @@ defineExpose({ open, close })
         </button>
 
         <button
-          v-if="!snapshot && tier === 'sequential'"
+          v-if="!snapshot && tier === 'sequential' && sequentialMode === 'auto'"
           type="button"
           class="btn btn--primary"
           :disabled="busy || downloadable.length === 0"
@@ -431,6 +581,115 @@ defineExpose({ open, close })
 .tier-hint {
   font-size: var(--fs-xs);
   color: var(--c-text-faint);
+}
+
+/* Ties a tier's revealed content back to the option above it, visually. */
+.indented {
+  margin-left: var(--sp-4);
+}
+
+.modes {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  border: 0;
+  padding: var(--sp-1) 0 var(--sp-1) var(--sp-4);
+  margin: 0;
+}
+
+.mode {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-3);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-md);
+  cursor: pointer;
+}
+.mode:hover {
+  background: var(--c-surface-hover);
+}
+
+.mode-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.mode-name {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+}
+
+.mode-hint {
+  font-size: var(--fs-xs);
+  color: var(--c-text-faint);
+}
+
+.link-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  margin: 0 0 0 var(--sp-4);
+  padding: var(--sp-2) var(--sp-3);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-md);
+  background: var(--c-surface-2);
+  max-height: 14rem;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.link-list a {
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  overflow-wrap: anywhere;
+}
+
+.auth {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  padding-top: var(--sp-2);
+  border-top: 1px solid var(--c-border);
+}
+
+.auth-state {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--sp-2);
+  font-size: var(--fs-xs);
+  color: var(--c-text-muted);
+}
+
+.auth-ok {
+  color: var(--c-success);
+  font-weight: 600;
+}
+
+.auth-scope {
+  color: var(--c-text-faint);
+}
+
+.auth-actions {
+  display: flex;
+  gap: var(--sp-3);
+}
+
+.link {
+  border: 0;
+  background: none;
+  padding: 0;
+  font-size: var(--fs-xs);
+  color: var(--c-accent);
+  cursor: pointer;
+}
+.link:hover:not(:disabled) {
+  text-decoration: underline;
+}
+
+.link--danger {
+  color: var(--c-danger);
 }
 
 .actions {
