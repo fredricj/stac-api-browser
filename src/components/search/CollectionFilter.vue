@@ -50,6 +50,8 @@ const scroller = useTemplateRef<HTMLElement>('scroller')
 
 const HEADER_HEIGHT = 26
 const OPTION_HEIGHT = 32
+/** Enough to fill the scroller box without implying a known row count. */
+const SKELETON_ROWS = 6
 
 const virtualizer = useVirtualizer(
   computed(() => ({
@@ -155,37 +157,49 @@ function groupLabel(key: string, label: string): string {
         role="group"
         :aria-label="t('search.collections.legend')"
       >
-        <div class="spacer" :style="{ height: `${totalHeight}px` }">
-          <div
-            v-for="entry in virtualRows"
-            :key="entry.row.key"
-            class="row"
-            :style="{ transform: `translateY(${entry.start}px)` }"
-          >
-            <p v-if="entry.row.type === 'header'" class="group-head">
-              <span class="group-label">
-                {{ groupLabel(entry.row.groupKey, entry.row.label) }}
-              </span>
-              <span class="group-count">{{ entry.row.count }}</span>
-            </p>
+        <!-- Nothing is loaded yet, so the virtualiser has no rows to draw —
+             placeholders shaped like the option list fill that box instead
+             of leaving it visibly empty under the loading caption above. -->
+        <ul v-if="loading" class="skeleton-rows" aria-hidden="true">
+          <li v-for="row in SKELETON_ROWS" :key="row" class="skeleton-row">
+            <span class="skeleton skeleton-check"></span>
+            <span class="skeleton skeleton-line"></span>
+          </li>
+        </ul>
 
-            <label v-else class="option">
-              <input
-                type="checkbox"
-                :checked="selectedSet.has(entry.row.option.id)"
-                @change="toggle(entry.row.option.id)"
-              />
-              <span class="option-text">
-                <span class="option-title">{{ entry.row.option.title }}</span>
-                <span class="option-id">{{ entry.row.option.id }}</span>
-              </span>
-            </label>
+        <template v-else>
+          <div class="spacer" :style="{ height: `${totalHeight}px` }">
+            <div
+              v-for="entry in virtualRows"
+              :key="entry.row.key"
+              class="row"
+              :style="{ transform: `translateY(${entry.start}px)` }"
+            >
+              <p v-if="entry.row.type === 'header'" class="group-head">
+                <span class="group-label">
+                  {{ groupLabel(entry.row.groupKey, entry.row.label) }}
+                </span>
+                <span class="group-count">{{ entry.row.count }}</span>
+              </p>
+
+              <label v-else class="option">
+                <input
+                  type="checkbox"
+                  :checked="selectedSet.has(entry.row.option.id)"
+                  @change="toggle(entry.row.option.id)"
+                />
+                <span class="option-text">
+                  <span class="option-title">{{ entry.row.option.title }}</span>
+                  <span class="option-id">{{ entry.row.option.id }}</span>
+                </span>
+              </label>
+            </div>
           </div>
-        </div>
 
-        <p v-if="!loading && rows.length === 0" class="empty">
-          {{ t('search.collections.noMatches') }}
-        </p>
+          <p v-if="rows.length === 0" class="empty">
+            {{ t('search.collections.noMatches') }}
+          </p>
+        </template>
       </div>
     </template>
 
@@ -295,6 +309,31 @@ function groupLabel(key: string, label: string): string {
 .spacer {
   position: relative;
   width: 100%;
+}
+
+.skeleton-rows {
+  list-style: none;
+  padding: var(--sp-1) 0;
+}
+
+.skeleton-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  height: 32px;
+  padding: 0 var(--sp-2);
+}
+
+.skeleton-check {
+  flex: none;
+  width: 0.9rem;
+  height: 0.9rem;
+}
+
+.skeleton-line {
+  flex: 1 1 auto;
+  max-width: 12rem;
+  height: 0.6rem;
 }
 
 /* Absolutely positioned and translated, which is what lets the virtualiser

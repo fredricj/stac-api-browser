@@ -157,3 +157,34 @@ textarea {
 .skip-link:focus {
   transform: translateY(0);
 }
+
+/*
+ * A loading placeholder shaped like the content it stands in for, rather
+ * than a spinner or a line of "Loading…" text floating over empty space.
+ * Shared here because several lists (results, collections) need the same
+ * shimmer, just cut into different shapes.
+ *
+ * The shimmer is pure decoration, so `prefers-reduced-motion` above already
+ * freezes it to a static gradient frame — still legible as a placeholder,
+ * just not moving.
+ */
+.skeleton {
+  border-radius: var(--r-sm);
+  background: linear-gradient(
+    90deg,
+    var(--c-surface-2) 25%,
+    var(--c-surface-hover) 50%,
+    var(--c-surface-2) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.6s ease-in-out infinite;
+}
+
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}

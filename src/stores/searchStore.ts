@@ -114,6 +114,12 @@ export const useSearchStore = defineStore('search', () => {
   const queryablesLoading = ref(false)
   const queryablesError = ref<SearchError | null>(null)
 
+  // Own controllers, separate from the search one below: switching catalogs
+  // quickly must not let a slow first catalog's collections or queryables
+  // land after a second catalog has already replaced them on screen.
+  let collectionsController: AbortController | null = null
+  let queryablesController: AbortController | null = null
+
   /* ---- Results ---- */
 
   const items = shallowRef<StacItem[]>([])
@@ -187,6 +193,13 @@ export const useSearchStore = defineStore('search', () => {
     }
 
     cancel()
+    collectionsController?.abort()
+    collectionsController = null
+    queryablesController?.abort()
+    queryablesController = null
+    collectionsLoading.value = false
+    queryablesLoading.value = false
+
     entry.value = next
     client = next ? (clientOverride ?? createStacClient(next.url)) : null
 
@@ -301,6 +314,10 @@ export const useSearchStore = defineStore('search', () => {
    *
    * Fetched once per catalog — 731 of them is a single ~880 KB response, big
    * enough to be worth not repeating and small enough to hold in memory.
+   *
+   * Own `AbortController`, checked by reference on resolution: switching
+   * catalogs while this is in flight must not let a slow first catalog's
+   * response land after a second catalog's has already replaced it.
    */
   async function loadCollections(): Promise<void> {
     if (
@@ -311,14 +328,20 @@ export const useSearchStore = defineStore('search', () => {
       return
     }
 
+    const controller = new AbortController()
+    collectionsController = controller
+
     collectionsLoading.value = true
     collectionsError.value = null
     try {
-      allCollections.value = await client.getCollections()
+      const result = await client.getCollections(controller.signal)
+      if (collectionsController !== controller) return
+      allCollections.value = result
     } catch (caught) {
+      if (collectionsController !== controller) return
       if (!isAbortError(caught)) collectionsError.value = toSearchError(caught)
     } finally {
-      collectionsLoading.value = false
+      if (collectionsController === controller) collectionsLoading.value = false
     }
   }
 
@@ -329,6 +352,9 @@ export const useSearchStore = defineStore('search', () => {
    * an empty list, so anything that still reaches here is a real failure —
    * offline, CORS, a 5xx — and belongs in `queryablesError` for the panel to
    * show, the same way `search` and `loadCollections` handle theirs.
+   *
+   * Own `AbortController`, checked by reference on resolution — see
+   * `loadCollections` for why.
    */
   async function loadQueryables(): Promise<void> {
     if (
@@ -339,14 +365,22 @@ export const useSearchStore = defineStore('search', () => {
       return
     }
 
+    const controller = new AbortController()
+    queryablesController = controller
+
     queryablesLoading.value = true
     queryablesError.value = null
     try {
-      queryableFields.value = parseQueryables(await fetchQueryables(client))
+      const result = await fetchQueryables(client, {
+        signal: controller.signal,
+      })
+      if (queryablesController !== controller) return
+      queryableFields.value = parseQueryables(result)
     } catch (caught) {
+      if (queryablesController !== controller) return
       if (!isAbortError(caught)) queryablesError.value = toSearchError(caught)
     } finally {
-      queryablesLoading.value = false
+      if (queryablesController === controller) queryablesLoading.value = false
     }
   }
 

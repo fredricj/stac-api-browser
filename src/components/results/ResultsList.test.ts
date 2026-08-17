@@ -139,6 +139,29 @@ describe('counts and terminal states', () => {
   })
 })
 
+describe('loading', () => {
+  it('shows placeholder rows shaped like results, not bare text, before any arrive', async () => {
+    const wrapper = mountList({ items: [], hasSearched: false, loading: true })
+    await flushPromises()
+
+    expect(wrapper.find('.skeleton-rows').exists()).toBe(true)
+    expect(wrapper.findAll('.skeleton-row').length).toBeGreaterThan(0)
+    // The visible page has no plain "Loading…" text; a screen reader still
+    // hears it, through the hidden status text alongside the skeleton.
+    expect(wrapper.find('.state').exists()).toBe(false)
+    expect(wrapper.find('.sr-only').text()).toBe('Loading…')
+  })
+
+  it('keeps showing stale results, with a plain-text notice, while a new search runs', async () => {
+    const wrapper = mountList({ loading: true })
+    await flushPromises()
+
+    expect(wrapper.find('.skeleton-rows').exists()).toBe(false)
+    expect(wrapper.find('.state').text()).toBe('Loading…')
+    expect(wrapper.findAll('.row').length).toBeGreaterThan(0)
+  })
+})
+
 describe('selection and hover', () => {
   it('emits the composite key when a row is ticked', async () => {
     const wrapper = mountList()

@@ -44,6 +44,8 @@ const { t, locale } = useI18n()
 const scroller = useTemplateRef<HTMLElement>('scroller')
 
 const ROW_HEIGHT = 68
+/** Enough to fill a typical panel height without over-promising a page size. */
+const SKELETON_ROWS = 6
 
 const virtualizer = useVirtualizer(
   computed(() => ({
@@ -105,12 +107,30 @@ const countLabel = computed(() => {
       <slot name="actions" />
     </header>
 
-    <p v-if="loading" class="state">{{ t('common.loading') }}</p>
+    <!-- Nothing on screen yet: a shape of what is coming reads faster than a
+         line of text over an empty box. Once there are stale results to keep
+         showing while a new search runs, that text is enough — replacing
+         real rows with placeholders mid-search would just cause a flicker. -->
+    <template v-if="loading && items.length === 0">
+      <p class="sr-only" role="status" aria-live="polite">
+        {{ t('common.loading') }}
+      </p>
+      <ul class="skeleton-rows" aria-hidden="true">
+        <li v-for="n in SKELETON_ROWS" :key="n" class="skeleton-row">
+          <span class="skeleton skeleton-thumb"></span>
+          <span class="skeleton-lines">
+            <span class="skeleton skeleton-line skeleton-line--id"></span>
+            <span class="skeleton skeleton-line skeleton-line--meta"></span>
+          </span>
+        </li>
+      </ul>
+    </template>
+    <p v-else-if="loading" class="state">{{ t('common.loading') }}</p>
     <p v-else-if="hasSearched && items.length === 0" class="state">
       {{ t('results.empty') }}
     </p>
 
-    <div ref="scroller" class="scroller">
+    <div v-show="!loading || items.length > 0" ref="scroller" class="scroller">
       <div class="spacer" :style="{ height: `${totalHeight}px` }">
         <div
           v-for="entry in virtualRows"
@@ -196,6 +216,45 @@ const countLabel = computed(() => {
   min-height: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
+}
+
+.skeleton-rows {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+  list-style: none;
+}
+
+.skeleton-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  height: 68px;
+  padding: var(--sp-2) var(--sp-3);
+  border-bottom: 1px solid var(--c-border);
+}
+
+.skeleton-thumb {
+  flex: none;
+  width: 3.25rem;
+  height: 3.25rem;
+}
+
+.skeleton-lines {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.skeleton-line {
+  height: 0.6rem;
+}
+.skeleton-line--id {
+  width: 55%;
+}
+.skeleton-line--meta {
+  width: 35%;
 }
 
 .spacer {

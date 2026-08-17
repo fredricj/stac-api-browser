@@ -362,6 +362,57 @@ describe('metadata loading', () => {
     expect(store.queryablesError).toMatchObject({ kind: 'http', status: 500 })
   })
 
+  it("does not let a slow first catalog's queryables overwrite a faster second catalog's", async () => {
+    const store = useSearchStore()
+
+    let resolveFirst: ((response: Response) => void) | undefined
+    const first = clientReturning([
+      () => new Promise<Response>((resolve) => (resolveFirst = resolve)),
+    ])
+    const second = clientReturning([jsonResponse(queryablesFixture)])
+
+    store.configure(ENTRY, first.client)
+    const firstLoad = store.loadQueryables() // left in flight, deliberately
+
+    store.configure({ ...ENTRY, id: 'other-catalog' }, second.client)
+    await store.loadQueryables()
+    expect(store.queryableFields.length).toBeGreaterThan(0)
+    const secondFieldNames = store.queryableFields.map((field) => field.name)
+
+    // The slow first request finally answers, after the switch.
+    resolveFirst?.(jsonResponse({}, 404))
+    await firstLoad
+
+    expect(store.queryableFields.map((field) => field.name)).toEqual(
+      secondFieldNames,
+    )
+  })
+
+  it("does not let a slow first catalog's collections overwrite a faster second catalog's", async () => {
+    const store = useSearchStore()
+
+    let resolveFirst: ((response: Response) => void) | undefined
+    const first = clientReturning([
+      () => new Promise<Response>((resolve) => (resolveFirst = resolve)),
+    ])
+    const second = clientReturning([
+      jsonResponse({ collections: [{ id: 'second' }], links: [] }),
+    ])
+
+    store.configure(ENTRY, first.client)
+    const firstLoad = store.loadCollections() // left in flight, deliberately
+
+    store.configure({ ...ENTRY, id: 'other-catalog' }, second.client)
+    await store.loadCollections()
+    expect(store.allCollections.map((c) => c.id)).toEqual(['second'])
+
+    // The slow first request finally answers, after the switch.
+    resolveFirst?.(jsonResponse({ collections: [{ id: 'first' }], links: [] }))
+    await firstLoad
+
+    expect(store.allCollections.map((c) => c.id)).toEqual(['second'])
+  })
+
   it('records a collections failure for the panel to show', async () => {
     const store = useSearchStore()
     const { client } = clientReturning([jsonResponse({ message: 'boom' }, 500)])

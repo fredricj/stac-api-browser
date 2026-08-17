@@ -73,6 +73,20 @@ describe('virtualisation', () => {
   })
 })
 
+describe('loading', () => {
+  it('fills the empty list with placeholder rows rather than a blank box', async () => {
+    const wrapper = mountFilter({ collections: [], loading: true })
+    await flushPromises()
+
+    expect(wrapper.find('.skeleton-rows').exists()).toBe(true)
+    expect(wrapper.findAll('.skeleton-row').length).toBeGreaterThan(0)
+    // The virtualised list and its "no matches" state are for once there is
+    // something — or definitively nothing — to report; loading is neither.
+    expect(wrapper.find('.spacer').exists()).toBe(false)
+    expect(wrapper.find('.empty').exists()).toBe(false)
+  })
+})
+
 describe('searching', () => {
   it('narrows to matching collections', async () => {
     const wrapper = mountFilter()
