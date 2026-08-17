@@ -317,7 +317,7 @@ function signOut() {
   border: 1px solid var(--c-accent);
   border-radius: var(--r-md);
   background: var(--c-accent);
-  color: #fff;
+  color: var(--c-text-inverse);
   font-size: var(--fs-sm);
   font-weight: 600;
   cursor: pointer;

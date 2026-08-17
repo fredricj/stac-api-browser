@@ -155,4 +155,66 @@ describe('accessibility', () => {
 
     expect(wrapper.find('.raw').exists()).toBe(false)
   })
+
+  it('gives focus back to whatever opened it once it closes', async () => {
+    // A row button in the results list, standing in for the real trigger.
+    const trigger = document.createElement('button')
+    document.body.appendChild(trigger)
+    trigger.focus()
+    expect(document.activeElement).toBe(trigger)
+
+    const wrapper = mount(ItemDetailDrawer, {
+      props: { item: null, selected: false },
+      global: { plugins: [i18n] },
+      attachTo: document.body,
+    })
+
+    await wrapper.setProps({ item })
+    await flushPromises()
+    // The panel focuses itself on the next animation frame.
+    await new Promise((resolve) => requestAnimationFrame(resolve))
+    // Opening moved focus into the drawer, away from the trigger.
+    expect(document.activeElement).not.toBe(trigger)
+
+    await wrapper.setProps({ item: null })
+    await flushPromises()
+
+    expect(document.activeElement).toBe(trigger)
+    trigger.remove()
+  })
+
+  it('wraps Tab from the last focusable element back to the first', async () => {
+    const wrapper = mountDrawer()
+    const focusable = wrapper
+      .findAll('a[href], button:not([disabled])')
+      .map((el) => el.element as HTMLElement)
+    expect(focusable.length).toBeGreaterThan(1)
+
+    const first = focusable[0]
+    const last = focusable[focusable.length - 1]
+    last.focus()
+    expect(document.activeElement).toBe(last)
+
+    await wrapper.find('.drawer').trigger('keydown', { key: 'Tab' })
+
+    expect(document.activeElement).toBe(first)
+  })
+
+  it('wraps Shift+Tab from the first focusable element back to the last', async () => {
+    const wrapper = mountDrawer()
+    const focusable = wrapper
+      .findAll('a[href], button:not([disabled])')
+      .map((el) => el.element as HTMLElement)
+
+    const first = focusable[0]
+    const last = focusable[focusable.length - 1]
+    first.focus()
+    expect(document.activeElement).toBe(first)
+
+    await wrapper
+      .find('.drawer')
+      .trigger('keydown', { key: 'Tab', shiftKey: true })
+
+    expect(document.activeElement).toBe(last)
+  })
 })

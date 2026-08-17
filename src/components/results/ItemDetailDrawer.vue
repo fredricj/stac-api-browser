@@ -27,6 +27,46 @@ const { t, locale } = useI18n()
 const showRaw = ref(false)
 const panel = useTemplateRef<HTMLElement>('panel')
 
+/** Whatever had focus before the drawer opened, so closing it can give it back. */
+let trigger: HTMLElement | null = null
+
+const FOCUSABLE_SELECTOR =
+  'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+
+/**
+ * Keep Tab inside the drawer while it is open.
+ *
+ * `aria-modal` tells assistive tech to treat the rest of the page as hidden,
+ * but it does not stop an actual Tab key from walking into it — a sighted
+ * keyboard user would tab straight past the drawer into a list they cannot
+ * see underneath it.
+ */
+function trapFocus(event: KeyboardEvent) {
+  if (event.key !== 'Tab' || !panel.value) return
+
+  const focusable = Array.from(
+    panel.value.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR),
+  )
+  if (focusable.length === 0) {
+    event.preventDefault()
+    return
+  }
+
+  const first = focusable[0]
+  const last = focusable[focusable.length - 1]
+  const active = document.activeElement
+
+  if (event.shiftKey) {
+    if (active === first || !panel.value.contains(active)) {
+      event.preventDefault()
+      last.focus()
+    }
+  } else if (active === last || !panel.value.contains(active)) {
+    event.preventDefault()
+    first.focus()
+  }
+}
+
 /** Properties that already have their own place in the header. */
 const HEADER_PROPERTIES = new Set([
   'datetime',
@@ -81,12 +121,20 @@ const rawJson = computed(() =>
 )
 
 // Opening the drawer moves focus into it, so a keyboard user is not left
-// tabbing through the list behind an overlay they cannot see.
+// tabbing through the list behind an overlay they cannot see. Closing it
+// gives focus back to whatever opened it — usually a row in the results
+// list — rather than dropping focus back to the top of the page.
 watch(
   () => props.item,
-  (item) => {
+  (item, previous) => {
     showRaw.value = false
-    if (item) requestAnimationFrame(() => panel.value?.focus())
+    if (item && !previous) {
+      trigger = document.activeElement as HTMLElement | null
+      requestAnimationFrame(() => panel.value?.focus())
+    } else if (!item && previous) {
+      trigger?.focus()
+      trigger = null
+    }
   },
 )
 </script>
@@ -101,6 +149,7 @@ watch(
       :aria-label="t('detail.label', { id: item.id })"
       tabindex="-1"
       @keydown.esc="emit('close')"
+      @keydown="trapFocus"
     >
       <header class="head">
         <div class="titles">

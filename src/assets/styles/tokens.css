@@ -18,7 +18,7 @@
   /* Text */
   --c-text: #1b2330;
   --c-text-muted: #5c6878;
-  --c-text-faint: #8a94a3;
+  --c-text-faint: #67717e;
   --c-text-inverse: #ffffff;
 
   /* Brand / interactive */
@@ -105,7 +105,7 @@
 
     --c-text: #e6eaf0;
     --c-text-muted: #a0aab8;
-    --c-text-faint: #6f7a89;
+    --c-text-faint: #8b96a5;
     --c-text-inverse: #0f1319;
 
     --c-accent: #5b9bff;

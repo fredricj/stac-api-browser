@@ -336,7 +336,7 @@ defineExpose({ open, close })
 .btn--primary {
   background: var(--c-accent);
   border-color: var(--c-accent);
-  color: #fff;
+  color: var(--c-text-inverse);
 }
 .btn--primary:hover:not(:disabled) {
   background: var(--c-accent-hover);

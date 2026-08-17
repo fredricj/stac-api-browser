@@ -122,7 +122,7 @@ const customs = computed(() => registry.entries.filter((e) => e.custom))
 .btn--primary {
   background: var(--c-accent);
   border-color: var(--c-accent);
-  color: #fff;
+  color: var(--c-text-inverse);
 }
 .btn--primary:hover {
   background: var(--c-accent-hover);
