@@ -148,6 +148,21 @@ describe('fetchQueryables', () => {
     await expect(fetchQueryables(client)).resolves.toBeNull()
   })
 
+  it('propagates a failure that is not "not supported"', async () => {
+    // A 500, unlike a 404, does not mean the catalog lacks queryables — it
+    // means the request failed, and the caller needs to know that rather
+    // than silently rendering an empty properties panel.
+    const client = new StacClient({
+      baseUrl: 'https://api.example.org/stac/v1/',
+      fetchImpl: async () => jsonResponse({ message: 'boom' }, 500),
+      retry: { retries: 0 },
+    })
+
+    await expect(fetchQueryables(client)).rejects.toMatchObject({
+      status: 500,
+    })
+  })
+
   it('propagates an abort', async () => {
     const controller = new AbortController()
     controller.abort()

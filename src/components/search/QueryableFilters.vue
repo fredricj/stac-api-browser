@@ -16,15 +16,20 @@ import {
   type QueryableValue,
   type QueryableValues,
 } from '@/services/queryables'
+import type { SearchError } from '@/stores/searchStore'
 import { labelForProperty } from '@/utils/propertyLabels'
 
 const props = defineProps<{
   fields: QueryableField[]
   values: QueryableValues
   loading?: boolean
+  error?: SearchError | null
 }>()
 
-const emit = defineEmits<{ 'update:values': [values: QueryableValues] }>()
+const emit = defineEmits<{
+  'update:values': [values: QueryableValues]
+  retry: []
+}>()
 
 const { t, locale } = useI18n()
 
@@ -105,10 +110,20 @@ function stepFor(field: QueryableField): number | 'any' {
 </script>
 
 <template>
-  <fieldset v-if="loading || fields.length" class="queryables">
+  <fieldset v-if="loading || fields.length || error" class="queryables">
     <legend class="legend">{{ t('search.queryables.legend') }}</legend>
 
     <p v-if="loading" class="status">{{ t('search.queryables.loading') }}</p>
+
+    <div v-else-if="error" class="error" role="alert">
+      <p class="error-text">{{ t('search.queryables.error') }}</p>
+      <p v-if="error.likelyCors" class="error-hint">
+        {{ t('search.results.corsHint') }}
+      </p>
+      <button type="button" class="retry" @click="emit('retry')">
+        {{ t('common.retry') }}
+      </button>
+    </div>
 
     <div v-for="field in fields" :key="field.name" class="field-block">
       <p class="field-name">
@@ -231,6 +246,40 @@ function stepFor(field: QueryableField): number | 'any' {
 .status {
   font-size: var(--fs-xs);
   color: var(--c-text-faint);
+}
+
+.error {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--sp-2);
+  padding: var(--sp-3);
+  border-radius: var(--r-md);
+  background: var(--c-danger-bg);
+}
+
+.error-text {
+  font-size: var(--fs-xs);
+  color: var(--c-danger);
+}
+
+.error-hint {
+  font-size: var(--fs-xs);
+  color: var(--c-danger);
+  opacity: 0.9;
+}
+
+.retry {
+  padding: var(--sp-1) var(--sp-3);
+  border: 1px solid var(--c-danger);
+  border-radius: var(--r-sm);
+  background: var(--c-surface);
+  color: var(--c-danger);
+  font-size: var(--fs-xs);
+  cursor: pointer;
+}
+.retry:hover {
+  background: var(--c-danger-bg);
 }
 
 .field-block {

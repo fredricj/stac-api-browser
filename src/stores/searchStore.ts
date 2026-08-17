@@ -112,6 +112,7 @@ export const useSearchStore = defineStore('search', () => {
 
   const queryableFields = shallowRef<QueryableField[]>([])
   const queryablesLoading = ref(false)
+  const queryablesError = ref<SearchError | null>(null)
 
   /* ---- Results ---- */
 
@@ -196,6 +197,7 @@ export const useSearchStore = defineStore('search', () => {
     allCollections.value = []
     collectionsError.value = null
     queryableFields.value = []
+    queryablesError.value = null
     resetResults()
   }
 
@@ -320,7 +322,14 @@ export const useSearchStore = defineStore('search', () => {
     }
   }
 
-  /** The catalog's queryables, for the generated filter controls. */
+  /**
+   * The catalog's queryables, for the generated filter controls.
+   *
+   * Never throws: `fetchQueryables` already turns "not supported" (404) into
+   * an empty list, so anything that still reaches here is a real failure —
+   * offline, CORS, a 5xx — and belongs in `queryablesError` for the panel to
+   * show, the same way `search` and `loadCollections` handle theirs.
+   */
   async function loadQueryables(): Promise<void> {
     if (
       !client ||
@@ -331,8 +340,11 @@ export const useSearchStore = defineStore('search', () => {
     }
 
     queryablesLoading.value = true
+    queryablesError.value = null
     try {
       queryableFields.value = parseQueryables(await fetchQueryables(client))
+    } catch (caught) {
+      if (!isAbortError(caught)) queryablesError.value = toSearchError(caught)
     } finally {
       queryablesLoading.value = false
     }
@@ -389,6 +401,7 @@ export const useSearchStore = defineStore('search', () => {
     collectionsError,
     queryableFields,
     queryablesLoading,
+    queryablesError,
     loadCollections,
     loadQueryables,
     // results

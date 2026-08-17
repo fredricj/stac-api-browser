@@ -137,3 +137,43 @@ describe('selection', () => {
     expect(wrapper.emitted('update:selected')?.at(-1)?.[0]).toEqual([])
   })
 })
+
+describe('a failed fetch', () => {
+  const error = { kind: 'http' as const, status: 500, message: '500' }
+
+  it('shows an error rather than an empty list', async () => {
+    const wrapper = mountFilter({ collections: [], error })
+    await flushPromises()
+
+    expect(wrapper.find('.error').exists()).toBe(true)
+    expect(wrapper.find('.search').exists()).toBe(false)
+    expect(wrapper.find('.empty').exists()).toBe(false)
+  })
+
+  it('hints at CORS when the failure looks like one', async () => {
+    const wrapper = mountFilter({
+      collections: [],
+      error: { ...error, likelyCors: true },
+    })
+    await flushPromises()
+
+    expect(wrapper.find('.error-hint').exists()).toBe(true)
+  })
+
+  it('asks to retry, and lets the parent decide what that means', async () => {
+    const wrapper = mountFilter({ collections: [], error })
+    await flushPromises()
+
+    await wrapper.find('.retry').trigger('click')
+
+    expect(wrapper.emitted('retry')).toHaveLength(1)
+  })
+
+  it('prefers the loading state once a retry is in flight', async () => {
+    const wrapper = mountFilter({ collections: [], error, loading: true })
+    await flushPromises()
+
+    expect(wrapper.find('.error').exists()).toBe(false)
+    expect(wrapper.find('.status').text()).toContain('Loading')
+  })
+})

@@ -118,14 +118,18 @@ const resultSummary = computed(() => {
         :collections="store.allCollections"
         :selected="store.collections"
         :loading="store.collectionsLoading"
+        :error="store.collectionsError"
         @update:selected="store.setCollections($event)"
+        @retry="store.loadCollections()"
       />
 
       <QueryableFilters
         :fields="store.queryableFields"
         :values="store.queryableValues"
         :loading="store.queryablesLoading"
+        :error="store.queryablesError"
         @update:values="store.setQueryableValues($event)"
+        @retry="store.loadQueryables()"
       />
     </div>
 

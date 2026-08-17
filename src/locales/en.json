@@ -98,11 +98,13 @@
       "selectMatching": "Select these {count}",
       "clear": "Clear selection",
       "noMatches": "No collections match.",
-      "undated": "No date"
+      "undated": "No date",
+      "error": "Could not load the collection list."
     },
     "queryables": {
       "legend": "Properties",
       "loading": "Reading what this catalog can filter on…",
+      "error": "Could not load the properties this catalog can filter on.",
       "min": "Smallest {field}",
       "max": "Largest {field}",
       "minShort": "min",

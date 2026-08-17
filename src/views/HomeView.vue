@@ -2,11 +2,14 @@
 import { computed, useTemplateRef } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRegistryStore } from '@/stores/registryStore'
+import { useToastStore } from '@/stores/toastStore'
+import type { StacApiEntry } from '@/types/registry'
 import StacApiCard from '@/components/home/StacApiCard.vue'
 import AddCustomApiDialog from '@/components/home/AddCustomApiDialog.vue'
 
 const { t } = useI18n()
 const registry = useRegistryStore()
+const toast = useToastStore()
 const addDialog =
   useTemplateRef<InstanceType<typeof AddCustomApiDialog>>('addDialog')
 
@@ -15,6 +18,10 @@ const addDialog =
 // the page renders instantly and works offline.
 const builtIns = computed(() => registry.entries.filter((e) => !e.custom))
 const customs = computed(() => registry.entries.filter((e) => e.custom))
+
+function onAdded(entry: StacApiEntry) {
+  toast.push(t('addDialog.addedToast', { title: entry.title }), 'success')
+}
 </script>
 
 <template>
@@ -55,7 +62,7 @@ const customs = computed(() => registry.entries.filter((e) => e.custom))
       </ul>
     </section>
 
-    <AddCustomApiDialog ref="addDialog" />
+    <AddCustomApiDialog ref="addDialog" @added="onAdded" />
   </div>
 </template>
 

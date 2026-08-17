@@ -1,10 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
-import { createPinia } from 'pinia'
+import { createPinia, setActivePinia, type Pinia } from 'pinia'
 import { createMemoryHistory, createRouter } from 'vue-router'
 import HomeView from '@/views/HomeView.vue'
 import i18n from '@/i18n'
 import { BUILTIN_APIS } from '@/config/registry'
+import { useToastStore } from '@/stores/toastStore'
 import rootFixture from '@/services/__fixtures__/root-bild.json'
 
 function router() {
@@ -21,13 +22,13 @@ function router() {
   })
 }
 
-async function mountHome() {
+async function mountHome(pinia: Pinia = createPinia()) {
   const r = router()
   await r.push('/')
   await r.isReady()
 
   const wrapper = mount(HomeView, {
-    global: { plugins: [createPinia(), r, i18n] },
+    global: { plugins: [pinia, r, i18n] },
     attachTo: document.body,
   })
   await flushPromises()
@@ -105,8 +106,8 @@ describe('HomeView', () => {
 })
 
 describe('AddCustomApiDialog', () => {
-  async function openDialog() {
-    const wrapper = await mountHome()
+  async function openDialog(pinia?: Pinia) {
+    const wrapper = await mountHome(pinia)
     await wrapper.find('.head-actions .btn--primary').trigger('click')
     await flushPromises()
     return wrapper
@@ -140,7 +141,9 @@ describe('AddCustomApiDialog', () => {
 
   it('checks, adds and persists a new catalog', async () => {
     vi.stubGlobal('fetch', okFetch())
-    const wrapper = await openDialog()
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    const wrapper = await openDialog(pinia)
 
     await wrapper.find('dialog input').setValue('https://example.org/stac/')
     await wrapper.find('dialog form').trigger('submit')
@@ -156,6 +159,12 @@ describe('AddCustomApiDialog', () => {
     expect(localStorage.getItem('stac-browser:custom-apis')).toContain(
       'example.org',
     )
+
+    // Confirmation that the catalog was added, not just a dialog that closed.
+    const toast = useToastStore()
+    expect(toast.toasts).toHaveLength(1)
+    expect(toast.toasts[0].message).toContain('Added')
+    expect(toast.toasts[0].variant).toBe('success')
   })
 
   it('explains a CORS failure and still offers to add it anyway', async () => {

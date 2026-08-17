@@ -12,7 +12,7 @@
  */
 
 import type { Cql2Filter, Queryables, QueryableProperty } from '@/types/search'
-import type { StacClient } from '@/services/stacClient'
+import { StacHttpError, type StacClient } from '@/services/stacClient'
 
 /**
  * Properties with their own dedicated control, or with no useful control at
@@ -130,7 +130,10 @@ export function parseQueryables(
  *
  * Returns null rather than throwing when the endpoint is missing: it is
  * optional in the spec, and a catalog without it should still be searchable
- * by bbox and date.
+ * by bbox and date. A 404 is the only case that means "not supported" —
+ * anything else (offline, CORS, a 5xx) is a real failure and propagates, so
+ * the caller can tell "this catalog has no properties to filter on" from
+ * "the properties could not be read" and say so.
  */
 export async function fetchQueryables(
   client: StacClient,
@@ -143,9 +146,8 @@ export async function fetchQueryables(
   try {
     return await client.getJson<Queryables>(path, options.signal)
   } catch (error) {
-    // An abort is the caller's decision and must propagate.
-    if ((error as { name?: string })?.name === 'AbortError') throw error
-    return null
+    if (error instanceof StacHttpError && error.status === 404) return null
+    throw error
   }
 }
 

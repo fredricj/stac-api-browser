@@ -98,11 +98,13 @@
       "selectMatching": "Välj dessa {count}",
       "clear": "Rensa valet",
       "noMatches": "Inga samlingar matchar.",
-      "undated": "Utan datum"
+      "undated": "Utan datum",
+      "error": "Kunde inte hämta listan över samlingar."
     },
     "queryables": {
       "legend": "Egenskaper",
       "loading": "Läser vad katalogen kan filtrera på…",
+      "error": "Kunde inte hämta vilka egenskaper katalogen kan filtrera på.",
       "min": "Minsta {field}",
       "max": "Största {field}",
       "minShort": "min",

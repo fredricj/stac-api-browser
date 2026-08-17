@@ -347,6 +347,47 @@ describe('metadata loading', () => {
 
     expect(store.queryableFields).toEqual([])
     expect(store.queryablesLoading).toBe(false)
+    // A 404 means "not supported", not "something went wrong" — no error to show.
+    expect(store.queryablesError).toBeNull()
+  })
+
+  it('records a real queryables failure rather than swallowing it', async () => {
+    const store = useSearchStore()
+    const { client } = clientReturning([jsonResponse({ message: 'boom' }, 500)])
+    store.configure(ENTRY, client)
+
+    await store.loadQueryables()
+
+    expect(store.queryableFields).toEqual([])
+    expect(store.queryablesError).toMatchObject({ kind: 'http', status: 500 })
+  })
+
+  it('records a collections failure for the panel to show', async () => {
+    const store = useSearchStore()
+    const { client } = clientReturning([jsonResponse({ message: 'boom' }, 500)])
+    store.configure(ENTRY, client)
+
+    await store.loadCollections()
+
+    expect(store.allCollections).toEqual([])
+    expect(store.collectionsError).toMatchObject({ kind: 'http', status: 500 })
+  })
+
+  it('clears stale metadata errors when the catalog changes', async () => {
+    const store = useSearchStore()
+    const failing = clientReturning([jsonResponse({ message: 'boom' }, 500)])
+    store.configure(ENTRY, failing.client)
+    await store.loadCollections()
+    await store.loadQueryables()
+    expect(store.collectionsError).not.toBeNull()
+    expect(store.queryablesError).not.toBeNull()
+
+    const OTHER: StacApiEntry = { ...ENTRY, id: 'other-catalog' }
+    const working = clientReturning([jsonResponse(queryablesFixture)])
+    store.configure(OTHER, working.client)
+
+    expect(store.collectionsError).toBeNull()
+    expect(store.queryablesError).toBeNull()
   })
 })
 

@@ -12,6 +12,7 @@ import { computed, ref, useTemplateRef } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useVirtualizer } from '@tanstack/vue-virtual'
 import type { StacCollection } from '@/types/stac'
+import type { SearchError } from '@/stores/searchStore'
 import {
   filterGroups,
   groupCollectionsByYear,
@@ -23,9 +24,10 @@ const props = defineProps<{
   collections: StacCollection[]
   selected: string[]
   loading?: boolean
+  error?: SearchError | null
 }>()
 
-const emit = defineEmits<{ 'update:selected': [ids: string[]] }>()
+const emit = defineEmits<{ 'update:selected': [ids: string[]]; retry: [] }>()
 
 const { t, n } = useI18n()
 
@@ -108,69 +110,86 @@ function groupLabel(key: string, label: string): string {
   <fieldset class="collections">
     <legend class="legend">{{ t('search.collections.legend') }}</legend>
 
-    <input
-      v-model="query"
-      type="search"
-      class="search"
-      :placeholder="t('search.collections.searchPlaceholder')"
-      :aria-label="t('search.collections.searchPlaceholder')"
-      autocomplete="off"
-    />
-
-    <p v-if="loading" class="status">{{ t('search.collections.loading') }}</p>
-    <p v-else class="status" role="status">
-      {{
-        t('search.collections.matchCount', {
-          matching: n(matchCount),
-          total: n(collections.length),
-        })
-      }}
-      <span v-if="selected.length" class="selected-count">
-        ·
-        {{ t('search.collections.selectedCount', { count: selected.length }) }}
-      </span>
-    </p>
-
-    <div
-      ref="scroller"
-      class="scroller"
-      role="group"
-      :aria-label="t('search.collections.legend')"
-    >
-      <div class="spacer" :style="{ height: `${totalHeight}px` }">
-        <div
-          v-for="entry in virtualRows"
-          :key="entry.row.key"
-          class="row"
-          :style="{ transform: `translateY(${entry.start}px)` }"
-        >
-          <p v-if="entry.row.type === 'header'" class="group-head">
-            <span class="group-label">
-              {{ groupLabel(entry.row.groupKey, entry.row.label) }}
-            </span>
-            <span class="group-count">{{ entry.row.count }}</span>
-          </p>
-
-          <label v-else class="option">
-            <input
-              type="checkbox"
-              :checked="selectedSet.has(entry.row.option.id)"
-              @change="toggle(entry.row.option.id)"
-            />
-            <span class="option-text">
-              <span class="option-title">{{ entry.row.option.title }}</span>
-              <span class="option-id">{{ entry.row.option.id }}</span>
-            </span>
-          </label>
-        </div>
-      </div>
-
-      <p v-if="!loading && rows.length === 0" class="empty">
-        {{ t('search.collections.noMatches') }}
+    <!-- The fetch that fills `collections` failed outright: there is nothing
+         to search or select, so say so instead of showing an empty list that
+         looks like the catalog simply has none. -->
+    <div v-if="error && !loading" class="error" role="alert">
+      <p class="error-text">{{ t('search.collections.error') }}</p>
+      <p v-if="error.likelyCors" class="error-hint">
+        {{ t('search.results.corsHint') }}
       </p>
+      <button type="button" class="retry" @click="emit('retry')">
+        {{ t('common.retry') }}
+      </button>
     </div>
 
-    <div class="bulk">
+    <template v-else>
+      <input
+        v-model="query"
+        type="search"
+        class="search"
+        :placeholder="t('search.collections.searchPlaceholder')"
+        :aria-label="t('search.collections.searchPlaceholder')"
+        autocomplete="off"
+      />
+
+      <p v-if="loading" class="status">{{ t('search.collections.loading') }}</p>
+      <p v-else class="status" role="status">
+        {{
+          t('search.collections.matchCount', {
+            matching: n(matchCount),
+            total: n(collections.length),
+          })
+        }}
+        <span v-if="selected.length" class="selected-count">
+          ·
+          {{
+            t('search.collections.selectedCount', { count: selected.length })
+          }}
+        </span>
+      </p>
+
+      <div
+        ref="scroller"
+        class="scroller"
+        role="group"
+        :aria-label="t('search.collections.legend')"
+      >
+        <div class="spacer" :style="{ height: `${totalHeight}px` }">
+          <div
+            v-for="entry in virtualRows"
+            :key="entry.row.key"
+            class="row"
+            :style="{ transform: `translateY(${entry.start}px)` }"
+          >
+            <p v-if="entry.row.type === 'header'" class="group-head">
+              <span class="group-label">
+                {{ groupLabel(entry.row.groupKey, entry.row.label) }}
+              </span>
+              <span class="group-count">{{ entry.row.count }}</span>
+            </p>
+
+            <label v-else class="option">
+              <input
+                type="checkbox"
+                :checked="selectedSet.has(entry.row.option.id)"
+                @change="toggle(entry.row.option.id)"
+              />
+              <span class="option-text">
+                <span class="option-title">{{ entry.row.option.title }}</span>
+                <span class="option-id">{{ entry.row.option.id }}</span>
+              </span>
+            </label>
+          </div>
+        </div>
+
+        <p v-if="!loading && rows.length === 0" class="empty">
+          {{ t('search.collections.noMatches') }}
+        </p>
+      </div>
+    </template>
+
+    <div v-if="!error || loading" class="bulk">
       <button
         type="button"
         class="link"
@@ -218,6 +237,40 @@ function groupLabel(key: string, label: string): string {
   border-radius: var(--r-sm);
   background: var(--c-bg);
   font-size: var(--fs-sm);
+}
+
+.error {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--sp-2);
+  padding: var(--sp-3);
+  border-radius: var(--r-md);
+  background: var(--c-danger-bg);
+}
+
+.error-text {
+  font-size: var(--fs-xs);
+  color: var(--c-danger);
+}
+
+.error-hint {
+  font-size: var(--fs-xs);
+  color: var(--c-danger);
+  opacity: 0.9;
+}
+
+.retry {
+  padding: var(--sp-1) var(--sp-3);
+  border: 1px solid var(--c-danger);
+  border-radius: var(--r-sm);
+  background: var(--c-surface);
+  color: var(--c-danger);
+  font-size: var(--fs-xs);
+  cursor: pointer;
+}
+.retry:hover {
+  background: var(--c-danger-bg);
 }
 
 .status {
