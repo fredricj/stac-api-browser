@@ -7,8 +7,8 @@ import {
 } from '@/config/basemaps'
 
 describe('basemap config', () => {
-  it('offers a light, dark and aerial option', () => {
-    expect(BASEMAPS.map((b) => b.id)).toEqual(['light', 'dark', 'aerial'])
+  it('offers a light and aerial option', () => {
+    expect(BASEMAPS.map((b) => b.id)).toEqual(['light', 'aerial'])
   })
 
   it('gives every basemap a unique id and a label key', () => {

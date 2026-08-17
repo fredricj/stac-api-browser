@@ -30,8 +30,7 @@
     "ariaLabel": "Karta över objektens utbredning. {count} visas. Använd resultatlistan för att välja objekt med tangentbordet.",
     "basemap": {
       "label": "Bakgrundskarta",
-      "light": "Ljus",
-      "dark": "Mörk",
+      "light": "Karta",
       "aerial": "Flygfoto"
     },
     "popup": {

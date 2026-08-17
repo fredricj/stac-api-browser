@@ -30,8 +30,7 @@
     "ariaLabel": "Map of item footprints. {count} shown. Use the results list to select items with the keyboard.",
     "basemap": {
       "label": "Basemap",
-      "light": "Light",
-      "dark": "Dark",
+      "light": "Map",
       "aerial": "Aerial"
     },
     "popup": {

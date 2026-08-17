@@ -14,7 +14,7 @@ import {
 } from '@/composables/useFootprintLayer'
 import { useBboxDraw } from '@/composables/useBboxDraw'
 import { useBboxOverlay } from '@/composables/useBboxOverlay'
-import { defaultBasemapId, type BasemapId } from '@/config/basemaps'
+import { type BasemapId } from '@/config/basemaps'
 import { clampBBox, isValidBBox } from '@/utils/bbox'
 import BasemapSwitcher from '@/components/map/BasemapSwitcher.vue'
 import FootprintPopup from '@/components/map/FootprintPopup.vue'
@@ -60,7 +60,7 @@ const selectedKeys = computed(() => props.selectedKeys)
 
 const { map, isReady, styleEpoch, basemapId, setBasemap } = useMapLibre({
   container,
-  initialBasemap: defaultBasemapId(),
+  initialBasemap: 'light',
   center: props.initialView
     ? [props.initialView.lon, props.initialView.lat]
     : undefined,

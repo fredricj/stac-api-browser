@@ -50,13 +50,7 @@ export const BASEMAPS: Basemap[] = [
   {
     id: 'light',
     labelKey: 'map.basemap.light',
-    style: 'https://tiles.openfreemap.org/styles/positron',
-  },
-  {
-    id: 'dark',
-    labelKey: 'map.basemap.dark',
-    style: 'https://tiles.openfreemap.org/styles/dark',
-    isDark: true,
+    style: 'https://tiles.openfreemap.org/styles/bright',
   },
   {
     id: 'aerial',
@@ -67,14 +61,6 @@ export const BASEMAPS: Basemap[] = [
 
 export function findBasemap(id: BasemapId): Basemap {
   return BASEMAPS.find((basemap) => basemap.id === id) ?? BASEMAPS[0]
-}
-
-/** Match the map to the OS colour scheme on first load. */
-export function defaultBasemapId(): BasemapId {
-  const prefersDark =
-    typeof matchMedia === 'function' &&
-    matchMedia('(prefers-color-scheme: dark)').matches
-  return prefersDark ? 'dark' : 'light'
 }
 
 /** Roughly Sweden, which is what every built-in catalog covers. */

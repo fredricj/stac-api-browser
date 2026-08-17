@@ -252,7 +252,7 @@ describe('StacMap hover', () => {
 describe('StacMap basemap switching', () => {
   it('offers the three basemaps and marks the active one', async () => {
     const wrapper = await mountMap()
-    expect(wrapper.findAll('.basemap-switcher .option')).toHaveLength(3)
+    expect(wrapper.findAll('.basemap-switcher .option')).toHaveLength(2)
     expect(wrapper.findAll('.option.is-active')).toHaveLength(1)
   })
 
