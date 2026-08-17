@@ -98,8 +98,7 @@ Lantmäteriet.
 ## Deployment
 
 Deploying is copying `dist/` to any static host — there is no server-side
-piece, no environment variables, and no secrets to configure at build or
-deploy time:
+piece and nothing to configure by hand at build or deploy time:
 
 ```bash
 npm run build
@@ -111,10 +110,26 @@ npm run build
   `dist/` with `index.html` as the SPA fallback for unmatched paths — the
   router uses HTML5 history mode, so a host that does not serve `index.html`
   for e.g. `/api/lantmateriet-bild` on a hard refresh will 404 there.
-- **A subpath, e.g. GitHub Pages project sites** (`user.github.io/repo-name/`):
-  set `base` in `vite.config.ts` to `/repo-name/` before building. The router
-  already reads it from Vite's `import.meta.env.BASE_URL`
-  (`src/router/index.ts`), so nothing else needs to change.
+- **GitHub Pages** (this repo's actual deployment target) is set up already:
+  [`.github/workflows/deploy.yml`](./.github/workflows/deploy.yml) builds and
+  publishes on every push to `main`, or on demand from the Actions tab. Two
+  things a plain static build needs that a project page specifically requires:
+  - **A subpath base.** `user.github.io/repo-name/` is not `/`, so
+    `vite.config.ts` sets `base` to `/stac-api-browser/` — but only when the
+    workflow's `GITHUB_PAGES` env var is set, so `dev`/`build`/`preview` and
+    the Playwright suite still assume the app is rooted at `/` locally. The
+    router already reads the base from Vite's `import.meta.env.BASE_URL`
+    (`src/router/index.ts`), so nothing else needed to change.
+  - **An SPA fallback with no rewrite rules.** GitHub Pages, unlike the hosts
+    above, cannot be told to serve `index.html` for an unmatched path — it
+    just 404s. `public/404.html` is the standard workaround: it encodes the
+    real path into a query string and redirects to the site root, where an
+    inline script in `index.html`'s `<head>` decodes it and restores the URL
+    with `history.replaceState` before Vue Router ever reads it. A no-op on
+    every other host, since that query string is never produced any other way.
+
+  The one manual step is enabling it once, in this repo's *Settings → Pages →
+  Source: GitHub Actions*.
 - **A third-party STAC catalog without CORS**, added later via *Add a
   catalog*: this only works when the browser can reach it directly. If one
   ever needs a proxy, `vite.config.ts` keeps a commented-out dev-server proxy

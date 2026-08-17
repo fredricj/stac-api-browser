@@ -1,0 +1,50 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  # Lets a deploy be re-run by hand from the Actions tab without a new commit.
+  workflow_dispatch:
+
+# The Pages deployment needs to mint its own OIDC token and write the
+# `github-pages` deployment; nothing else here needs more than read access.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Only one deployment at a time, and never cancel one that is already live —
+# a cancelled-mid-upload deploy would leave the site on a half-published build.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+        env:
+          # Tells vite.config.ts to root the build at /stac-api-browser/
+          # instead of /, which is where a project page is actually served.
+          GITHUB_PAGES: 'true'
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

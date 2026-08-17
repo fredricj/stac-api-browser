@@ -6,6 +6,7 @@ import vue from '@vitejs/plugin-vue'
 
 // https://vite.dev/config/
 export default defineConfig({
+  base: process.env.GITHUB_PAGES ? '/stac-api-browser/' : '/',
   plugins: [vue()],
   // MapLibre spawns its worker with `{ type: 'module' }`, so the worker asset
   // has to be ES too. The default ('iife') would force MapLibre down its
