@@ -1,10 +1,8 @@
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 
-import 'maplibre-gl/dist/maplibre-gl.css'
 import '@/assets/styles/tokens.css'
 import '@/assets/styles/base.css'
-import '@/assets/styles/map.css'
 
 import App from '@/App.vue'
 import router from '@/router'

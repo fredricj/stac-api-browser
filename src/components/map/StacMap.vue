@@ -3,6 +3,8 @@ import { computed, ref, shallowRef, useTemplateRef, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { LngLat, MapMouseEvent } from 'maplibre-gl'
 import { LngLatBounds } from 'maplibre-gl'
+import 'maplibre-gl/dist/maplibre-gl.css'
+import '@/assets/styles/map.css'
 import type { BBox2D, StacItem } from '@/types/stac'
 import { useMapLibre } from '@/composables/useMapLibre'
 import {

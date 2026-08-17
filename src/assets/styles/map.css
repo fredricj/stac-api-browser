@@ -1,7 +1,8 @@
 /*
- * Map chrome. MapLibre's own stylesheet is imported in main.ts; this file
- * only reconciles its controls with our tokens so the map does not read as
- * a foreign widget dropped into the page.
+ * Map chrome. MapLibre's own stylesheet is imported alongside this file from
+ * StacMap.vue, not main.ts — both are only needed once the lazy map route
+ * loads. This file reconciles MapLibre's controls with our tokens so the map
+ * does not read as a foreign widget dropped into the page.
  */
 
 .map-root canvas:focus-visible {
