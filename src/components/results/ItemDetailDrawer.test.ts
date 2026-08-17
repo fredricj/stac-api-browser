@@ -52,6 +52,65 @@ describe('contents', () => {
     expect(labels).toContain('sat:orbit_state')
   })
 
+  it('renders an array of objects as JSON, not "[object Object]"', () => {
+    // `pc:statistics` (Planetary Computer's per-band stats) and `pc:schemas`
+    // are arrays of objects, not of strings — `Array.prototype.join` calls
+    // each entry's `toString()`, and a bare object's is always the literal
+    // string "[object Object]".
+    const wrapper = mountDrawer({
+      item: {
+        ...item,
+        properties: {
+          ...item.properties,
+          'pc:statistics': [
+            { name: 'red', min: 0, max: 255 },
+            { name: 'green', min: 0, max: 255 },
+          ],
+        },
+      },
+    })
+
+    const value = wrapper
+      .findAll('.props dt')
+      .find((dt) => dt.text() === 'pc:statistics')!.element.nextElementSibling!
+      .textContent
+
+    expect(value).not.toContain('[object Object]')
+    expect(value).toContain('"name":"red"')
+  })
+
+  it('renders a lone object property as JSON', () => {
+    const wrapper = mountDrawer({
+      item: {
+        ...item,
+        properties: { ...item.properties, 'custom:extra': { a: 1 } },
+      },
+    })
+
+    const value = wrapper
+      .findAll('.props dt')
+      .find((dt) => dt.text() === 'custom:extra')!.element.nextElementSibling!
+      .textContent
+
+    expect(value).toBe('{"a":1}')
+  })
+
+  it('still comma-joins an array of plain values', () => {
+    const wrapper = mountDrawer({
+      item: {
+        ...item,
+        properties: { ...item.properties, 'proj:shape': [15625, 15625] },
+      },
+    })
+
+    const value = wrapper
+      .findAll('.props dt')
+      .find((dt) => dt.text() === 'proj:shape')!.element.nextElementSibling!
+      .textContent
+
+    expect(value).toBe('15625, 15625')
+  })
+
   it('keeps the wire name available for anyone who needs it', () => {
     const wrapper = mountDrawer()
     const flightYear = wrapper

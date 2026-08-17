@@ -74,6 +74,16 @@ const HEADER_PROPERTIES = new Set([
   'end_datetime',
 ])
 
+function formatPropertyValue(value: unknown): string {
+  if (Array.isArray(value)) {
+    const isPrimitive = value.every(
+      (entry) => entry === null || typeof entry !== 'object',
+    )
+    return isPrimitive ? value.join(', ') : JSON.stringify(value)
+  }
+  return typeof value === 'object' ? JSON.stringify(value) : String(value)
+}
+
 const thumbnail = computed(() =>
   props.item ? (thumbnailAsset(props.item)?.href ?? null) : null,
 )
@@ -85,11 +95,7 @@ const properties = computed(() => {
     .map(([name, value]) => ({
       name,
       label: labelForProperty(name, locale.value) ?? name,
-      value: Array.isArray(value)
-        ? value.join(', ')
-        : typeof value === 'object'
-          ? JSON.stringify(value)
-          : String(value),
+      value: formatPropertyValue(value),
     }))
     .sort((a, b) => a.label.localeCompare(b.label, locale.value))
 })
