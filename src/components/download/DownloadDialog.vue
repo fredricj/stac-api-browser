@@ -266,11 +266,18 @@ defineExpose({ open, close })
         <fieldset class="tiers">
           <legend class="sr-only">{{ t('download.tierLegend') }}</legend>
 
-          <label class="tier" :class="{ 'is-off': !canStreamToFolder }">
+          <label
+            class="tier"
+            :class="{
+              'is-off': !canStreamToFolder,
+              'is-selected': tier === 'folder',
+            }"
+          >
             <input
               v-model="tier"
               type="radio"
               value="folder"
+              class="sr-only"
               :disabled="!canStreamToFolder"
               @change="rememberTier"
             />
@@ -288,11 +295,12 @@ defineExpose({ open, close })
             </span>
           </label>
 
-          <label class="tier">
+          <label class="tier" :class="{ 'is-selected': tier === 'sequential' }">
             <input
               v-model="tier"
               type="radio"
               value="sequential"
+              class="sr-only"
               @change="rememberTier"
             />
             <span class="tier-text">
@@ -305,65 +313,12 @@ defineExpose({ open, close })
             </span>
           </label>
 
-          <!-- Nested inside the option it belongs to, not tacked on after
-               every tier — the sub-choice only makes sense once "save one at
-               a time" is the thing selected. -->
-          <template v-if="tier === 'sequential'">
-            <fieldset class="modes">
-              <legend class="sr-only">
-                {{ t('download.sequential.modeLegend') }}
-              </legend>
-
-              <label class="mode">
-                <input v-model="sequentialMode" type="radio" value="auto" />
-                <span class="mode-text">
-                  <span class="mode-name">
-                    {{ t('download.sequential.auto.name') }}
-                  </span>
-                  <span class="mode-hint">
-                    {{ t('download.sequential.auto.hint') }}
-                  </span>
-                </span>
-              </label>
-
-              <label class="mode">
-                <input v-model="sequentialMode" type="radio" value="links" />
-                <span class="mode-text">
-                  <span class="mode-name">
-                    {{ t('download.sequential.links.name') }}
-                  </span>
-                  <span class="mode-hint">
-                    {{ t('download.sequential.links.hint') }}
-                  </span>
-                </span>
-              </label>
-            </fieldset>
-
-            <p v-if="sequentialMode === 'auto'" class="warn indented">
-              {{ t('download.sequentialWarning') }}
-            </p>
-
-            <!-- No fetch of ours touches these — the browser navigates to the
-                 asset directly, so its own Basic-auth prompt is what asks for
-                 the password, and the app never sees it. -->
-            <ul
-              v-else
-              class="link-list"
-              :aria-label="t('download.sequential.links.name')"
-            >
-              <li v-for="item in downloadable" :key="item.key">
-                <a :href="item.href!" target="_blank" rel="noopener noreferrer">
-                  {{ safeFilename(item.href!, item.id) }}
-                </a>
-              </li>
-            </ul>
-          </template>
-
-          <label class="tier">
+          <label class="tier" :class="{ 'is-selected': tier === 'manifest' }">
             <input
               v-model="tier"
               type="radio"
               value="manifest"
+              class="sr-only"
               @change="rememberTier"
             />
             <span class="tier-text">
@@ -375,11 +330,60 @@ defineExpose({ open, close })
               </span>
             </span>
           </label>
-
-          <!-- Same reasoning: the export panel belongs under the option that
-               reveals it. -->
-          <ManifestExportPanel v-if="tier === 'manifest'" class="indented" />
         </fieldset>
+
+        <div v-if="tier === 'sequential'" class="tier-detail">
+          <fieldset class="modes">
+            <legend class="sr-only">
+              {{ t('download.sequential.modeLegend') }}
+            </legend>
+
+            <label class="mode">
+              <input v-model="sequentialMode" type="radio" value="auto" />
+              <span class="mode-text">
+                <span class="mode-name">
+                  {{ t('download.sequential.auto.name') }}
+                </span>
+                <span class="mode-hint">
+                  {{ t('download.sequential.auto.hint') }}
+                </span>
+              </span>
+            </label>
+
+            <label class="mode">
+              <input v-model="sequentialMode" type="radio" value="links" />
+              <span class="mode-text">
+                <span class="mode-name">
+                  {{ t('download.sequential.links.name') }}
+                </span>
+                <span class="mode-hint">
+                  {{ t('download.sequential.links.hint') }}
+                </span>
+              </span>
+            </label>
+          </fieldset>
+
+          <p v-if="sequentialMode === 'auto'" class="warn">
+            {{ t('download.sequentialWarning') }}
+          </p>
+
+          <!-- No fetch of ours touches these — the browser navigates to the
+               asset directly, so its own Basic-auth prompt is what asks for
+               the password, and the app never sees it. -->
+          <ul
+            v-else
+            class="link-list"
+            :aria-label="t('download.sequential.links.name')"
+          >
+            <li v-for="item in downloadable" :key="item.key">
+              <a :href="item.href!" target="_blank" rel="noopener noreferrer">
+                {{ safeFilename(item.href!, item.id) }}
+              </a>
+            </li>
+          </ul>
+        </div>
+
+        <ManifestExportPanel v-if="tier === 'manifest'" class="tier-detail" />
 
         <!-- Sign-in lives here, scoped to the tier that is actually chosen:
              a download manager reads credentials from the shell environment
@@ -532,6 +536,7 @@ defineExpose({ open, close })
   background: var(--c-warning-bg);
   padding: var(--sp-2) var(--sp-3);
   border-radius: var(--r-md);
+  margin-top: var(--sp-1);
 }
 
 .error {
@@ -542,9 +547,13 @@ defineExpose({ open, close })
   border-radius: var(--r-md);
 }
 
+/* Side by side rather than stacked: these are three alternatives, not steps
+   in a sequence, and a row makes that legible at a glance. `auto-fit` folds
+   back to fewer columns as the dialog narrows, so nothing is forced to
+   overflow or truncate on a small screen. */
 .tiers {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
   gap: var(--sp-2);
   border: 0;
   padding: 0;
@@ -553,8 +562,8 @@ defineExpose({ open, close })
 
 .tier {
   display: flex;
-  align-items: flex-start;
-  gap: var(--sp-2);
+  flex-direction: column;
+  gap: var(--sp-1);
   padding: var(--sp-2) var(--sp-3);
   border: 1px solid var(--c-border);
   border-radius: var(--r-md);
@@ -568,9 +577,28 @@ defineExpose({ open, close })
   cursor: not-allowed;
 }
 
+/* Border as well as fill, and the name recolours too: selection is never
+   signalled by colour alone. */
+.tier.is-selected {
+  border-color: var(--c-accent);
+  background: var(--c-accent-bg);
+}
+.tier.is-selected .tier-name {
+  color: var(--c-accent);
+}
+
+/* The radio itself is visually hidden (see the template), so its own
+   `:focus-visible` outline would land on a clipped 1px box no one can see.
+   Forward it to the card instead. */
+.tier:has(input:focus-visible) {
+  outline: 2px solid var(--c-focus);
+  outline-offset: 2px;
+}
+
 .tier-text {
   display: flex;
   flex-direction: column;
+  gap: var(--sp-1);
 }
 
 .tier-name {
@@ -583,9 +611,10 @@ defineExpose({ open, close })
   color: var(--c-text-faint);
 }
 
-/* Ties a tier's revealed content back to the option above it, visually. */
-.indented {
-  margin-left: var(--sp-4);
+/* What the chosen tier needs, set off from the row of choices above it. */
+.tier-detail {
+  padding-top: var(--sp-2);
+  border-top: 1px solid var(--c-border);
 }
 
 .modes {
@@ -593,7 +622,7 @@ defineExpose({ open, close })
   flex-direction: column;
   gap: var(--sp-2);
   border: 0;
-  padding: var(--sp-1) 0 var(--sp-1) var(--sp-4);
+  padding: 0;
   margin: 0;
 }
 
@@ -629,7 +658,7 @@ defineExpose({ open, close })
   display: flex;
   flex-direction: column;
   gap: var(--sp-1);
-  margin: 0 0 0 var(--sp-4);
+  margin: var(--sp-1) 0 0 0;
   padding: var(--sp-2) var(--sp-3);
   border: 1px solid var(--c-border);
   border-radius: var(--r-md);

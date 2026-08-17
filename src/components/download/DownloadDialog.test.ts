@@ -160,6 +160,41 @@ describe('defaults when nothing is remembered', () => {
   })
 })
 
+describe('the tier cards', () => {
+  it('marks the chosen card without relying on the radio being visible', async () => {
+    // The radio is `.sr-only` — a card grid has nowhere natural to put a bare
+    // circle — so the card itself has to carry the selected state.
+    withDirectoryPicker(true)
+    const wrapper = await mountDialog()
+
+    const cards = wrapper.findAll('.tier')
+    const selectedCard = cards.find((card) => card.classes('is-selected'))
+    expect(selectedCard).toBeDefined()
+    expect(selectedCard!.find('input[type="radio"]').element).toHaveProperty(
+      'checked',
+      true,
+    )
+
+    await chooseTier(wrapper, 'manifest')
+
+    const nowSelected = wrapper
+      .findAll('.tier')
+      .filter((card) => card.classes('is-selected'))
+    expect(nowSelected).toHaveLength(1)
+    expect(nowSelected[0].find('input[type="radio"]').attributes('value')).toBe(
+      'manifest',
+    )
+  })
+
+  it('keeps the radio in the DOM and functional, just visually hidden', async () => {
+    const wrapper = await mountDialog()
+
+    const radios = wrapper.findAll('.tier input[type="radio"]')
+    expect(radios).toHaveLength(3)
+    for (const radio of radios) expect(radio.classes()).toContain('sr-only')
+  })
+})
+
 describe('sign-in', () => {
   const entry: StacApiEntry = {
     id: 'lantmateriet-bild',
