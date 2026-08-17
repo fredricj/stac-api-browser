@@ -74,6 +74,8 @@ const HEADER_PROPERTIES = new Set([
   'end_datetime',
 ])
 
+const HIDDEN_PROPERTIES = new Set(['pc:schemas', 'pc:statistics'])
+
 function formatPropertyValue(value: unknown): string {
   if (Array.isArray(value)) {
     const isPrimitive = value.every(
@@ -91,7 +93,12 @@ const thumbnail = computed(() =>
 const properties = computed(() => {
   if (!props.item) return []
   return Object.entries(props.item.properties)
-    .filter(([name, value]) => !HEADER_PROPERTIES.has(name) && value != null)
+    .filter(
+      ([name, value]) =>
+        !HEADER_PROPERTIES.has(name) &&
+        !HIDDEN_PROPERTIES.has(name) &&
+        value != null,
+    )
     .map(([name, value]) => ({
       name,
       label: labelForProperty(name, locale.value) ?? name,

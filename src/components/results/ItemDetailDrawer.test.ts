@@ -53,16 +53,16 @@ describe('contents', () => {
   })
 
   it('renders an array of objects as JSON, not "[object Object]"', () => {
-    // `pc:statistics` (Planetary Computer's per-band stats) and `pc:schemas`
-    // are arrays of objects, not of strings — `Array.prototype.join` calls
-    // each entry's `toString()`, and a bare object's is always the literal
-    // string "[object Object]".
+    // Some STAC extensions (Planetary Computer's `pc:statistics`, one entry
+    // per band) put objects *inside* the array, not just strings —
+    // `Array.prototype.join` calls each entry's `toString()`, and a bare
+    // object's is always the literal string "[object Object]".
     const wrapper = mountDrawer({
       item: {
         ...item,
         properties: {
           ...item.properties,
-          'pc:statistics': [
+          'ext:bands': [
             { name: 'red', min: 0, max: 255 },
             { name: 'green', min: 0, max: 255 },
           ],
@@ -72,11 +72,30 @@ describe('contents', () => {
 
     const value = wrapper
       .findAll('.props dt')
-      .find((dt) => dt.text() === 'pc:statistics')!.element.nextElementSibling!
+      .find((dt) => dt.text() === 'ext:bands')!.element.nextElementSibling!
       .textContent
 
     expect(value).not.toContain('[object Object]')
     expect(value).toContain('"name":"red"')
+  })
+
+  it('hides pc:schemas and pc:statistics for now', () => {
+    // A wall of per-band statistics or schema URIs is not something a plain
+    // properties list reads well; the raw JSON toggle still covers them.
+    const wrapper = mountDrawer({
+      item: {
+        ...item,
+        properties: {
+          ...item.properties,
+          'pc:schemas': ['https://example.org/schema.json'],
+          'pc:statistics': [{ name: 'red', min: 0, max: 255 }],
+        },
+      },
+    })
+
+    const labels = wrapper.findAll('.props dt').map((dt) => dt.text())
+    expect(labels).not.toContain('pc:schemas')
+    expect(labels).not.toContain('pc:statistics')
   })
 
   it('renders a lone object property as JSON', () => {
