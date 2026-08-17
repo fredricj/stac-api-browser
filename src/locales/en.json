@@ -197,12 +197,12 @@
     "signOut": "Sign out"
   },
   "download": {
-    "open": "Download selected",
+    "open": "Open download alternatives",
     "title": "Download",
     "summary": "{count} files, about {size}.",
     "sizeEstimated": "(part of this is estimated)",
     "tierLegend": "How to download",
-    "tooBigForBrowser": "At {size} this is a job for a download manager, not a browser tab. Export a list below and let aria2c fetch it — it resumes, runs in parallel, and survives closing your laptop.",
+    "tooBigForBrowser": "At {size} this is a job for a download manager, not the browser. Export a list/script below and let an external program download them.",
     "chooseFolder": "Choose a folder…",
     "startSequential": "Start downloading",
     "running": "Downloading…",
@@ -221,7 +221,7 @@
       },
       "manifest": {
         "name": "Export a list for a download manager",
-        "hint": "The right answer for a large job, and always available."
+        "hint": "The best alternative for large amount of data."
       }
     },
     "sequential": {

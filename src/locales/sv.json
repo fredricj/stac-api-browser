@@ -197,12 +197,12 @@
     "signOut": "Logga ut"
   },
   "download": {
-    "open": "Ladda ner valda",
+    "open": "Öppna nedladdningsalternativ",
     "title": "Ladda ner",
     "summary": "{count} filer, cirka {size}.",
     "sizeEstimated": "(delvis uppskattat)",
     "tierLegend": "Så här laddar du ner",
-    "tooBigForBrowser": "Med {size} är det här ett jobb för en nedladdningshanterare, inte en webbläsarflik. Exportera en lista nedan och låt aria2c hämta den — den återupptar, kör parallellt och överlever att du stänger locket.",
+    "tooBigForBrowser": "Med {size} är det här ett jobb för en nedladdningshanterare, inte med webbläsaren. Exportera en lista eller skript nedan och hämta dem.",
     "chooseFolder": "Välj en mapp…",
     "startSequential": "Börja ladda ner",
     "running": "Laddar ner…",
@@ -221,7 +221,7 @@
       },
       "manifest": {
         "name": "Exportera en lista för en nedladdningshanterare",
-        "hint": "Rätt svar för ett stort jobb, och finns alltid."
+        "hint": "Bästa alternativ för större mängd data."
       }
     },
     "sequential": {
