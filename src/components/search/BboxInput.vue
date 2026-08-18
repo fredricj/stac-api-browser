@@ -100,7 +100,13 @@ const isLarge = computed(() => area.value > LARGE_AREA_KM2)
     <legend class="legend">{{ t('search.bbox.legend') }}</legend>
 
     <div class="grid">
-      <label v-for="(label, index) in LABELS" :key="label" class="field">
+      <label
+        v-for="(label, index) in LABELS"
+        :key="label"
+        class="field"
+        :class="{ 'field--pole': label === 'north' || label === 'south' }"
+        :style="{ gridArea: label }"
+      >
         <span class="field-label">{{ t(`search.bbox.${label}`) }}</span>
         <input
           class="field-input"
@@ -157,7 +163,18 @@ const isLarge = computed(() => area.value > LARGE_AREA_KM2)
 .grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
+  grid-template-areas:
+    'north north'
+    'west east'
+    'south south';
   gap: var(--sp-2);
+}
+
+/* North and south each span both columns for centering, but should stay the
+   same width as west and east rather than stretching to fill the row. */
+.field--pole {
+  width: calc(50% - var(--sp-2) / 2);
+  justify-self: center;
 }
 
 .field {
