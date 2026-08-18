@@ -5,6 +5,10 @@ import i18n from '@/i18n'
 import SearchPanel from '@/components/search/SearchPanel.vue'
 import { useSearchStore } from '@/stores/searchStore'
 import { BUILTIN_APIS } from '@/config/registry'
+import {
+  DEFAULT_PAGE_LIMIT,
+  PAGE_LIMIT_OPTIONS,
+} from '@/services/pageLimitPreference'
 
 function mountPanel() {
   return mount(SearchPanel, {
@@ -82,5 +86,38 @@ describe('the search button stays reachable', () => {
     expect(wrapper.find('.panel-scroll').element.contains(guard.element)).toBe(
       false,
     )
+  })
+})
+
+describe('page size', () => {
+  it('offers every configured option, defaulting to DEFAULT_PAGE_LIMIT', () => {
+    const wrapper = mountPanel()
+    const select = wrapper.find('select.page-limit-select')
+
+    const values = select
+      .findAll('option')
+      .map((option) => Number(option.attributes('value')))
+    expect(values).toEqual([...PAGE_LIMIT_OPTIONS])
+    expect((select.element as HTMLSelectElement).value).toBe(
+      String(DEFAULT_PAGE_LIMIT),
+    )
+  })
+
+  it('updates the store when a different size is chosen', async () => {
+    const store = useSearchStore()
+    const wrapper = mountPanel()
+
+    await wrapper.find('select.page-limit-select').setValue('1000')
+
+    expect(store.pageLimit).toBe(1000)
+  })
+
+  it('sits outside the scrolling region, next to the search button', () => {
+    // Changing it should not require scrolling past every filter first.
+    const wrapper = mountPanel()
+    const scroller = wrapper.find('.panel-scroll').element
+    const select = wrapper.find('.page-limit').element
+
+    expect(scroller.contains(select)).toBe(false)
   })
 })

@@ -51,6 +51,9 @@
     "panelLabel": "Sök",
     "search": "Sök",
     "searching": "Söker…",
+    "pageLimit": {
+      "label": "Objekt per sida"
+    },
     "coords": {
       "label": "Gå till en koordinat",
       "placeholder": "59.33, 18.07",

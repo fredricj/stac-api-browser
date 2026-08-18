@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { MAX_PAGES, useSearchStore } from '@/stores/searchStore'
 import { StacClient } from '@/services/stacClient'
+import { DEFAULT_PAGE_LIMIT } from '@/services/pageLimitPreference'
 import type { StacApiEntry } from '@/types/registry'
 import type { StacItem } from '@/types/stac'
 import page1 from '@/services/__fixtures__/search-get-page1.json'
@@ -54,6 +55,7 @@ function itemKeys(items: StacItem[]): string[] {
 }
 
 beforeEach(() => {
+  localStorage.clear()
   setActivePinia(createPinia())
 })
 
@@ -455,5 +457,48 @@ describe('clearFilters', () => {
 
     expect(store.hasActiveFilters).toBe(false)
     expect(store.items).toHaveLength(5)
+  })
+})
+
+describe('pageLimit', () => {
+  it('defaults to DEFAULT_PAGE_LIMIT and sends it as the search limit', async () => {
+    const store = useSearchStore()
+    const { client, calls } = clientReturning([jsonResponse(page1)])
+    store.configure(ENTRY, client)
+
+    expect(store.pageLimit).toBe(DEFAULT_PAGE_LIMIT)
+
+    await store.search()
+
+    const url = new URL(calls[0].url)
+    expect(url.searchParams.get('limit')).toBe(String(DEFAULT_PAGE_LIMIT))
+  })
+
+  it('sends a chosen limit as the search limit', async () => {
+    const store = useSearchStore()
+    const { client, calls } = clientReturning([jsonResponse(page1)])
+    store.configure(ENTRY, client)
+    store.setPageLimit(1000)
+
+    await store.search()
+
+    const url = new URL(calls[0].url)
+    expect(url.searchParams.get('limit')).toBe('1000')
+  })
+
+  it('persists a chosen limit across sessions', () => {
+    const store = useSearchStore()
+    store.setPageLimit(50)
+
+    expect(localStorage.getItem('stac-browser:page-limit')).toBe('50')
+  })
+
+  it('is a preference, not a search input — configure leaves it alone', () => {
+    const store = useSearchStore()
+    store.setPageLimit(1000)
+
+    store.configure({ ...ENTRY, id: 'other-catalog' })
+
+    expect(store.pageLimit).toBe(1000)
   })
 })

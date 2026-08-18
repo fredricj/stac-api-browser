@@ -51,6 +51,9 @@
     "panelLabel": "Search",
     "search": "Search",
     "searching": "Searching…",
+    "pageLimit": {
+      "label": "Items per page"
+    },
     "coords": {
       "label": "Go to a coordinate",
       "placeholder": "59.33, 18.07",

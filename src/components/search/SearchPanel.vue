@@ -12,6 +12,10 @@ import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useSearchStore } from '@/stores/searchStore'
 import { emptyValue } from '@/services/queryables'
+import {
+  PAGE_LIMIT_OPTIONS,
+  type PageLimit,
+} from '@/services/pageLimitPreference'
 import type { BBox2D } from '@/types/stac'
 import { resolveCrs } from '@/utils/projections'
 import ActiveFilterChips from '@/components/search/ActiveFilterChips.vue'
@@ -76,6 +80,13 @@ function clearQueryable(name: string) {
   store.setQueryableValues(next)
 }
 
+/** The `<select>` only ever offers `PAGE_LIMIT_OPTIONS`, so the value read
+ *  back from it is always one of them. */
+function onPageLimitChange(event: Event) {
+  const value = Number((event.target as HTMLSelectElement).value) as PageLimit
+  store.setPageLimit(value)
+}
+
 const resultSummary = computed(() => {
   if (!store.hasSearched) return null
   // Never a total: `numberMatched` is null on these APIs, so the only honest
@@ -134,6 +145,26 @@ const resultSummary = computed(() => {
     </div>
 
     <footer class="panel-foot">
+      <div class="page-limit">
+        <label class="page-limit-label" for="page-limit">
+          {{ t('search.pageLimit.label') }}
+        </label>
+        <select
+          id="page-limit"
+          class="page-limit-select"
+          :value="store.pageLimit"
+          @change="onPageLimitChange"
+        >
+          <option
+            v-for="option in PAGE_LIMIT_OPTIONS"
+            :key="option"
+            :value="option"
+          >
+            {{ n(option) }}
+          </option>
+        </select>
+      </div>
+
       <div class="actions">
         <!-- The area guard. Item counts grow with the square of the box and
              there is no total to warn afterwards, so this asks first. -->
@@ -238,6 +269,27 @@ const resultSummary = computed(() => {
   display: flex;
   flex-wrap: wrap;
   gap: var(--sp-2);
+}
+
+.page-limit {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+}
+
+.page-limit-label {
+  font-size: var(--fs-xs);
+  color: var(--c-text-muted);
+}
+
+.page-limit-select {
+  padding: var(--sp-1) var(--sp-2);
+  border: 1px solid var(--c-border-strong);
+  border-radius: var(--r-sm);
+  background: var(--c-bg);
+  font-size: var(--fs-sm);
+  font-family: var(--font-mono);
 }
 
 .guard {

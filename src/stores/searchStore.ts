@@ -37,9 +37,15 @@ import {
 } from '@/services/queryables'
 import { itemKey } from '@/types/stac'
 import { LARGE_AREA_KM2, bboxAreaKm2, isValidBBox } from '@/utils/bbox'
+import {
+  DEFAULT_PAGE_LIMIT,
+  loadPageLimit,
+  savePageLimit,
+  type PageLimit,
+} from '@/services/pageLimitPreference'
 
-/** Items per page. Large enough to fill the map, small enough to feel quick. */
-export const PAGE_LIMIT = 250
+export type { PageLimit } from '@/services/pageLimitPreference'
+export { PAGE_LIMIT_OPTIONS } from '@/services/pageLimitPreference'
 
 /**
  * Ceiling on *Load more*.
@@ -103,6 +109,20 @@ export const useSearchStore = defineStore('search', () => {
   /** RFC 3339 interval, e.g. `2020-01-01T00:00:00Z/..`. */
   const datetime = ref<string | null>(null)
   const queryableValues = ref<QueryableValues>({})
+
+  /**
+   * How many items a search page asks for.
+   *
+   * A remembered preference, not a search input: unlike the four above, it
+   * does not describe what a search is looking for, so `configure` below
+   * deliberately leaves it alone when the catalog changes.
+   */
+  const pageLimit = ref<PageLimit>(loadPageLimit() ?? DEFAULT_PAGE_LIMIT)
+
+  function setPageLimit(next: PageLimit): void {
+    pageLimit.value = next
+    savePageLimit(next)
+  }
 
   /* ---- Catalog metadata ---- */
 
@@ -239,7 +259,7 @@ export const useSearchStore = defineStore('search', () => {
         : undefined,
       datetime: datetime.value ?? undefined,
       filter: filter.value,
-      limit: PAGE_LIMIT,
+      limit: pageLimit.value,
     }
   }
 
@@ -429,6 +449,9 @@ export const useSearchStore = defineStore('search', () => {
     setDatetime,
     setQueryableValues,
     clearFilters,
+    // preferences
+    pageLimit,
+    setPageLimit,
     // metadata
     allCollections,
     collectionsLoading,
