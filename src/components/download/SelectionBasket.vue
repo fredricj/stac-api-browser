@@ -44,15 +44,6 @@ const sizeLabel = computed(() =>
 
 /** True once the selection is large enough that the tier-3 advice applies. */
 const isLarge = computed(() => selection.size.bytes > 50e9)
-
-function confirmClear() {
-  if (selection.count === 0) return
-  // A basket assembled across several searches is real work; losing it to a
-  // stray click would be worse than one extra confirmation.
-  if (window.confirm(t('basket.clearConfirm', { count: selection.count }))) {
-    selection.clear()
-  }
-}
 </script>
 
 <template>
@@ -130,7 +121,7 @@ function confirmClear() {
         type="button"
         class="link link--danger"
         :disabled="selection.isEmpty"
-        @click="confirmClear"
+        @click="selection.clear()"
       >
         {{ t('basket.clear') }}
       </button>

@@ -153,8 +153,7 @@
     "selectAll": "Välj alla {count} hämtade",
     "selectInBox": "Välj alla i rutan",
     "invert": "Invertera",
-    "clear": "Rensa",
-    "clearConfirm": "Ta bort alla {count} valda objekt?"
+    "clear": "Rensa"
   },
   "detail": {
     "label": "Detaljer för {id}",

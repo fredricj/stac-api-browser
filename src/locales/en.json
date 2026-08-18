@@ -153,8 +153,7 @@
     "selectAll": "Select all {count} loaded",
     "selectInBox": "Select all in the box",
     "invert": "Invert",
-    "clear": "Clear",
-    "clearConfirm": "Remove all {count} selected items?"
+    "clear": "Clear"
   },
   "detail": {
     "label": "Details for {id}",

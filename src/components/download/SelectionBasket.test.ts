@@ -149,25 +149,10 @@ describe('bulk actions', () => {
     expect(store.count).toBe(items.length - 1)
   })
 
-  it('confirms before discarding a basket', async () => {
-    const store = useSelectionStore()
-    store.configure('cat')
-    store.add(items)
-    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false)
-    const wrapper = mountBasket()
-
-    await wrapper.find('.link--danger').trigger('click')
-
-    expect(confirm).toHaveBeenCalled()
-    // Declining keeps the basket — it is real work assembled over time.
-    expect(store.count).toBe(items.length)
-  })
-
   it('clears when the confirmation is accepted', async () => {
     const store = useSelectionStore()
     store.configure('cat')
     store.add(items)
-    vi.spyOn(window, 'confirm').mockReturnValue(true)
     const wrapper = mountBasket()
 
     await wrapper.find('.link--danger').trigger('click')
