@@ -30,6 +30,20 @@ export interface StacApiEntry {
   license?: string
   /** Where a user goes to request access or read the product docs. */
   docsUrl?: string
+  /**
+   * How the collection filter groups this catalog's collections.
+   *
+   * `'year'` (the default) groups by acquisition year — right for a catalog
+   * like stac-bild, where 731 collections are the same kind of thing
+   * repeated per place and year, and "newest first" is the useful axis.
+   * `'product'` instead groups by the collection's title with its trailing
+   * per-tile suffix stripped (`groupCollectionsByProduct` in
+   * `utils/collectionGroups.ts`) — right for a catalog like stac-hojd, where
+   * a handful of distinct products (each split into many same-named tiles)
+   * is the more useful way to slice the list, and there is no meaningful
+   * "newest" to sort by.
+   */
+  collectionGrouping?: 'year' | 'product'
   /** User-added entries are removable; built-ins are not. */
   custom?: boolean
   addedAt?: string

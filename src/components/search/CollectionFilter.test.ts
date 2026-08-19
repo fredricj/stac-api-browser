@@ -4,9 +4,14 @@ import i18n from '@/i18n'
 import CollectionFilter from '@/components/search/CollectionFilter.vue'
 import type { StacCollection } from '@/types/stac'
 import collectionsFixture from '@/services/__fixtures__/collections-bild.json'
+import hojdCollectionsFixture from '@/services/__fixtures__/collections-hojd.json'
 
 const liveCollections = (
   collectionsFixture as unknown as { collections: StacCollection[] }
+).collections
+
+const liveHojdCollections = (
+  hojdCollectionsFixture as unknown as { collections: StacCollection[] }
 ).collections
 
 function mountFilter(props: Record<string, unknown> = {}) {
@@ -149,6 +154,109 @@ describe('selection', () => {
     await wrapper.findAll('.bulk .link')[1].trigger('click')
 
     expect(wrapper.emitted('update:selected')?.at(-1)?.[0]).toEqual([])
+  })
+})
+
+describe('product grouping', () => {
+  it('stays out of the way for the default, year-grouped catalog', async () => {
+    const wrapper = mountFilter()
+    await flushPromises()
+
+    expect(wrapper.find('.products').exists()).toBe(false)
+  })
+
+  it('offers "All" plus one chip per product, with counts', async () => {
+    const wrapper = mountFilter({
+      collections: liveHojdCollections,
+      grouping: 'product',
+    })
+    await flushPromises()
+
+    const chips = wrapper.findAll('.product-chip')
+    // Alphabetical after "All" — there is no "newest" to lead with here.
+    expect(chips.map((chip) => chip.text())).toEqual([
+      'All',
+      'Laserdata Skog (1)',
+      'Markhöjdmodell (77)',
+    ])
+    // "All" is where it starts.
+    expect(chips[0].classes('is-on')).toBe(true)
+  })
+
+  it('narrows the list to the chosen product', async () => {
+    const wrapper = mountFilter({
+      collections: liveHojdCollections,
+      grouping: 'product',
+    })
+    await flushPromises()
+
+    const laserdata = wrapper
+      .findAll('.product-chip')
+      .find((chip) => chip.text().startsWith('Laserdata'))!
+    await laserdata.trigger('click')
+    await flushPromises()
+
+    expect(laserdata.classes('is-on')).toBe(true)
+    expect(wrapper.find('.status').text()).toContain('1 of 78')
+  })
+
+  it('goes back to everything when "All" is clicked again', async () => {
+    const wrapper = mountFilter({
+      collections: liveHojdCollections,
+      grouping: 'product',
+    })
+    await flushPromises()
+    await wrapper.findAll('.product-chip')[1].trigger('click')
+    await flushPromises()
+
+    await wrapper.findAll('.product-chip')[0].trigger('click')
+    await flushPromises()
+
+    expect(wrapper.find('.status').text()).toContain('78 of 78')
+  })
+
+  it('combines with the search box — both narrow at once', async () => {
+    const wrapper = mountFilter({
+      collections: liveHojdCollections,
+      grouping: 'product',
+    })
+    await flushPromises()
+    const markhojdmodell = wrapper
+      .findAll('.product-chip')
+      .find((chip) => chip.text().startsWith('Markhöjdmodell'))!
+    await markhojdmodell.trigger('click')
+
+    await wrapper.find('input[type="search"]').setValue('dtm')
+    await settle()
+
+    expect(wrapper.find('.status').text()).toContain('1 of 78')
+  })
+
+  it("does not carry a selection over when the catalog's collections change", async () => {
+    // Otherwise a leftover product key from one catalog would filter a
+    // different catalog's whole list down to nothing.
+    const wrapper = mountFilter({
+      collections: liveHojdCollections,
+      grouping: 'product',
+    })
+    await flushPromises()
+    await wrapper.findAll('.product-chip')[1].trigger('click')
+    await flushPromises()
+
+    await wrapper.setProps({ collections: [...liveHojdCollections] })
+    await flushPromises()
+
+    expect(wrapper.find('.status').text()).toContain('78 of 78')
+  })
+
+  it('hides the picker rather than showing a single, pointless chip', async () => {
+    const wrapper = mountFilter({
+      collections: [liveHojdCollections.find((c) => c.id === 'dtm-cog')!],
+      grouping: 'product',
+    })
+    await flushPromises()
+
+    expect(wrapper.find('.products').exists()).toBe(false)
   })
 })
 

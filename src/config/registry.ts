@@ -36,6 +36,11 @@ export const BUILTIN_APIS: StacApiEntry[] = [
     license: 'CC BY 4.0',
     docsUrl:
       'https://www.lantmateriet.se/sv/geodata/vara-produkter/produktlista/markhojdmodell-nedladdning/',
+    // 78 collections, but really just two products: 77 "Markhöjdmodell"
+    // tiles (`mhm-*` plus the whole-country `dtm-cog`) and one "Laserdata
+    // Skog" (`dsm-skoglig-copc`). Grouping by year, as stac-bild does, would
+    // scatter them by each tile's multi-year acquisition window instead.
+    collectionGrouping: 'product',
   },
   {
     id: 'lantmateriet-vektor',

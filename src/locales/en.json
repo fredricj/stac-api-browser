@@ -107,7 +107,9 @@
       "clear": "Clear selection",
       "noMatches": "No collections match.",
       "undated": "No date",
-      "error": "Could not load the collection list."
+      "error": "Could not load the collection list.",
+      "productsLegend": "Product",
+      "allProducts": "All"
     },
     "queryables": {
       "legend": "Properties",

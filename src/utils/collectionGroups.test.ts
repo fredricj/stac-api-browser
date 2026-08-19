@@ -3,14 +3,21 @@ import {
   collectionRegion,
   collectionYear,
   filterGroups,
+  groupCollectionsByProduct,
   groupCollectionsByYear,
+  productName,
   toRows,
 } from '@/utils/collectionGroups'
 import type { StacCollection } from '@/types/stac'
 import collectionsFixture from '@/services/__fixtures__/collections-bild.json'
+import hojdCollectionsFixture from '@/services/__fixtures__/collections-hojd.json'
 
 const liveCollections = (
   collectionsFixture as unknown as { collections: StacCollection[] }
+).collections
+
+const liveHojdCollections = (
+  hojdCollectionsFixture as unknown as { collections: StacCollection[] }
 ).collections
 
 /** A collection with only the fields these helpers read. */
@@ -112,6 +119,68 @@ describe('groupCollectionsByYear', () => {
     // Grouped into years rather than left as one flat list of 731.
     expect(groups.length).toBeGreaterThan(10)
     expect(groups.length).toBeLessThan(liveCollections.length)
+  })
+})
+
+describe('productName', () => {
+  it.each([
+    ['Markhöjdmodell 65_3', 'Markhöjdmodell'],
+    ['Markhöjdmodell 68-4', 'Markhöjdmodell'],
+    ['Laserdata Skog', 'Laserdata Skog'],
+    // A bare title, nothing to strip.
+    ['Markhöjdmodell', 'Markhöjdmodell'],
+  ])('reads %s as %s', (title, expected) => {
+    expect(productName(title)).toBe(expected)
+  })
+})
+
+describe('groupCollectionsByProduct', () => {
+  it('groups by the title with its per-tile suffix stripped', () => {
+    const groups = groupCollectionsByProduct([
+      collection('mhm-65_3', { title: 'Markhöjdmodell 65_3' }),
+      collection('mhm-74_8', { title: 'Markhöjdmodell 74_8' }),
+      collection('dsm-skoglig-copc', { title: 'Laserdata Skog' }),
+    ])
+
+    expect(groups.map((group) => group.key).sort()).toEqual([
+      'Laserdata Skog',
+      'Markhöjdmodell',
+    ])
+    expect(
+      groups.find((group) => group.key === 'Markhöjdmodell')?.options,
+    ).toHaveLength(2)
+  })
+
+  it('sorts groups alphabetically — there is no "newest" to lead with', () => {
+    const groups = groupCollectionsByProduct([
+      collection('b', { title: 'Öar' }),
+      collection('a', { title: 'Berg' }),
+    ])
+    expect(groups.map((group) => group.key)).toEqual(['Berg', 'Öar'])
+  })
+
+  it('never produces an "unknown" bucket — every collection has a title', () => {
+    const groups = groupCollectionsByProduct([collection('vektor-byggnad')])
+    expect(groups.every((group) => group.key !== 'unknown')).toBe(true)
+  })
+
+  it('resolves the real stac-hojd payload into exactly the two known products', () => {
+    const groups = groupCollectionsByProduct(liveHojdCollections)
+    const total = groups.reduce((sum, group) => sum + group.options.length, 0)
+
+    expect(total).toBe(liveHojdCollections.length)
+    expect(groups.map((group) => group.key).sort()).toEqual([
+      'Laserdata Skog',
+      'Markhöjdmodell',
+    ])
+    // 76 `mhm-*` tiles plus the whole-country `dtm-cog`, both titled
+    // "Markhöjdmodell" — the reason this cannot just group by id prefix.
+    expect(
+      groups.find((group) => group.key === 'Markhöjdmodell')?.options,
+    ).toHaveLength(77)
+    expect(
+      groups.find((group) => group.key === 'Laserdata Skog')?.options,
+    ).toHaveLength(1)
   })
 })
 

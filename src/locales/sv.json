@@ -107,7 +107,9 @@
       "clear": "Rensa valet",
       "noMatches": "Inga samlingar matchar.",
       "undated": "Utan datum",
-      "error": "Kunde inte hämta listan över samlingar."
+      "error": "Kunde inte hämta listan över samlingar.",
+      "productsLegend": "Produkt",
+      "allProducts": "Alla"
     },
     "queryables": {
       "legend": "Egenskaper",

@@ -8,24 +8,30 @@
  * first, because "the most recent imagery of this place" is the question
  * almost everyone actually has.
  */
-import { computed, ref, useTemplateRef } from 'vue'
+import { computed, ref, watch, useTemplateRef } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useVirtualizer } from '@tanstack/vue-virtual'
 import type { StacCollection } from '@/types/stac'
 import type { SearchError } from '@/stores/searchStore'
 import {
   filterGroups,
+  groupCollectionsByProduct,
   groupCollectionsByYear,
   toRows,
 } from '@/utils/collectionGroups'
 import { useDebouncedRef } from '@/composables/useDebounce'
 
-const props = defineProps<{
-  collections: StacCollection[]
-  selected: string[]
-  loading?: boolean
-  error?: SearchError | null
-}>()
+const props = withDefaults(
+  defineProps<{
+    collections: StacCollection[]
+    selected: string[]
+    loading?: boolean
+    error?: SearchError | null
+    /** See `StacApiEntry.collectionGrouping`. */
+    grouping?: 'year' | 'product'
+  }>(),
+  { loading: false, error: null, grouping: 'year' },
+)
 
 const emit = defineEmits<{ 'update:selected': [ids: string[]]; retry: [] }>()
 
@@ -35,10 +41,43 @@ const query = ref('')
 // 731 entries re-filtered on every keystroke is enough work to feel it.
 const debouncedQuery = useDebouncedRef(query, 150)
 
-const groups = computed(() => groupCollectionsByYear(props.collections))
-const visibleGroups = computed(() =>
-  filterGroups(groups.value, debouncedQuery.value),
+const groups = computed(() =>
+  props.grouping === 'product'
+    ? groupCollectionsByProduct(props.collections)
+    : groupCollectionsByYear(props.collections),
 )
+
+/**
+ * The top-level product picker, e.g. "Markhöjdmodell" / "Laserdata Skog" —
+ * only meaningful (and only rendered) when there is more than one, so a
+ * catalog whose products happen to number one still just shows the list.
+ */
+const activeProduct = ref<string | null>(null)
+const productGroups = computed(() =>
+  props.grouping === 'product'
+    ? groups.value.map((group) => ({
+        key: group.key,
+        label: group.label,
+        count: group.options.length,
+      }))
+    : [],
+)
+
+// A stale product selection surviving a catalog switch would silently filter
+// the new list down to nothing, since its group keys mean nothing there.
+watch(
+  () => props.collections,
+  () => {
+    activeProduct.value = null
+  },
+)
+
+const visibleGroups = computed(() => {
+  const base = activeProduct.value
+    ? groups.value.filter((group) => group.key === activeProduct.value)
+    : groups.value
+  return filterGroups(base, debouncedQuery.value)
+})
 const rows = computed(() => toRows(visibleGroups.value))
 
 const selectedSet = computed(() => new Set(props.selected))
@@ -126,6 +165,37 @@ function groupLabel(key: string, label: string): string {
     </div>
 
     <template v-else>
+      <!-- Only for a catalog whose collections are really a handful of
+           distinct products, not the years-of-imagery shape `stac-bild` has —
+           see `StacApiEntry.collectionGrouping`. -->
+      <div
+        v-if="productGroups.length > 1"
+        class="products"
+        role="group"
+        :aria-label="t('search.collections.productsLegend')"
+      >
+        <button
+          type="button"
+          class="product-chip"
+          :class="{ 'is-on': activeProduct === null }"
+          :aria-pressed="activeProduct === null"
+          @click="activeProduct = null"
+        >
+          {{ t('search.collections.allProducts') }}
+        </button>
+        <button
+          v-for="group in productGroups"
+          :key="group.key"
+          type="button"
+          class="product-chip"
+          :class="{ 'is-on': activeProduct === group.key }"
+          :aria-pressed="activeProduct === group.key"
+          @click="activeProduct = group.key"
+        >
+          {{ group.label }} ({{ n(group.count) }})
+        </button>
+      </div>
+
       <input
         v-model="query"
         type="search"
@@ -243,6 +313,31 @@ function groupLabel(key: string, label: string): string {
   letter-spacing: 0.06em;
   color: var(--c-text-faint);
   padding-inline: var(--sp-1);
+}
+
+.products {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-1);
+}
+
+.product-chip {
+  padding: var(--sp-1) var(--sp-2);
+  border: 1px solid var(--c-border-strong);
+  border-radius: var(--r-full);
+  background: var(--c-surface);
+  font-size: var(--fs-xs);
+  cursor: pointer;
+}
+.product-chip:hover {
+  background: var(--c-surface-hover);
+}
+/* Border as well as fill: selection is never signalled by colour alone. */
+.product-chip.is-on {
+  background: var(--c-accent-bg);
+  border-color: var(--c-accent);
+  color: var(--c-accent);
+  font-weight: 600;
 }
 
 .search {

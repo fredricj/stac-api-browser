@@ -130,6 +130,7 @@ const resultSummary = computed(() => {
         :selected="store.collections"
         :loading="store.collectionsLoading"
         :error="store.collectionsError"
+        :grouping="store.entry?.collectionGrouping"
         @update:selected="store.setCollections($event)"
         @retry="store.loadCollections()"
       />

@@ -6,6 +6,13 @@
  * first letter of a municipality. Almost every real question is "what covers
  * this place, and how recently", so the list groups by year, newest first,
  * and searches across id, title and the region parsed out of the id.
+ *
+ * `stac-hojd` is a different shape entirely: 78 collections that are really
+ * just two *products* — one split into many identically-structured tiles,
+ * each with its own multi-year acquisition window, so "year" groups them
+ * almost at random. `groupCollectionsByProduct` handles that case, grouping
+ * by the collection's title with its per-tile suffix stripped instead. Which
+ * one applies is a per-catalog choice — see `StacApiEntry.collectionGrouping`.
  */
 
 import type { StacCollection } from '@/types/stac'
@@ -22,7 +29,7 @@ export interface CollectionOption {
 }
 
 export interface CollectionGroup {
-  /** Stable key: the year as a string, or `unknown`. */
+  /** Stable key: the year as a string, `unknown`, or a product name. */
   key: string
   label: string
   options: CollectionOption[]
@@ -114,6 +121,45 @@ export function groupCollectionsByYear(
   }
 
   return groups
+}
+
+/**
+ * The product name in a title like `Markhöjdmodell 65_3` — everything before
+ * a trailing run of digits, underscores and hyphens. A title with no such
+ * suffix (`Laserdata Skog`) is already just the product name.
+ */
+export function productName(title: string): string {
+  const match = title.match(/^(.+?)\s+[\d_-]+$/)
+  return match ? match[1] : title
+}
+
+/**
+ * Group by product — the collection's title with its per-tile suffix
+ * stripped — rather than by year. Alphabetical, since unlike a year there is
+ * no "newest" to put first; every collection lands in a real group, since
+ * every collection has a title.
+ */
+export function groupCollectionsByProduct(
+  collections: StacCollection[],
+): CollectionGroup[] {
+  const byProduct = new Map<string, CollectionOption[]>()
+
+  for (const collection of collections) {
+    if (!collection?.id) continue
+    const option = toOption(collection)
+    const product = productName(option.title)
+    const bucket = byProduct.get(product)
+    if (bucket) bucket.push(option)
+    else byProduct.set(product, [option])
+  }
+
+  return [...byProduct.entries()]
+    .sort(([a], [b]) => a.localeCompare(b, 'sv'))
+    .map(([product, options]) => ({
+      key: product,
+      label: product,
+      options: sortByTitle(options),
+    }))
 }
 
 function sortByTitle(options: CollectionOption[]): CollectionOption[] {
