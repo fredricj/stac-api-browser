@@ -4,6 +4,15 @@
  * Light is the base palette on bare :root. Dark only redefines the token
  * values, so every component can reference a single name and stay
  * theme-agnostic. Nothing outside this file should hardcode a colour.
+ *
+ * Three states, per `src/theme.ts`: "system" (the default — no `data-theme`
+ * attribute, so only the `prefers-color-scheme` media query below applies)
+ * and an explicit "light" or "dark", stamped as `data-theme` on `<html>` and
+ * overriding the media query in both directions. The dark palette therefore
+ * appears twice — once guarded by `:not([data-theme="light"])` so it can be
+ * overridden, once unguarded under `[data-theme="dark"]` so it always wins —
+ * kept in sync by hand rather than via a preprocessor, since duplicating a
+ * few dozen variables is a smaller cost than adding a build step for it.
  */
 
 :root {
@@ -95,7 +104,7 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme='light']) {
     --c-bg: #0f1319;
     --c-surface: #171c24;
     --c-surface-2: #1e242e;
@@ -135,4 +144,48 @@
     --shadow-lg:
       0 8px 8px -4px rgba(0, 0, 0, 0.3), 0 20px 24px -4px rgba(0, 0, 0, 0.5);
   }
+}
+
+/* An explicit "dark" choice, overriding prefers-color-scheme in either
+   direction — see the file header comment. Keep in sync with the block
+   above; this is the same palette, just unguarded. */
+:root[data-theme='dark'] {
+  --c-bg: #0f1319;
+  --c-surface: #171c24;
+  --c-surface-2: #1e242e;
+  --c-surface-hover: #262d39;
+  --c-border: #2b323d;
+  --c-border-strong: #3d4552;
+
+  --c-text: #e6eaf0;
+  --c-text-muted: #a0aab8;
+  --c-text-faint: #8b96a5;
+  --c-text-inverse: #0f1319;
+
+  --c-accent: #5b9bff;
+  --c-accent-hover: #7db0ff;
+  --c-accent-bg: rgba(91, 155, 255, 0.14);
+  --c-accent-border: rgba(91, 155, 255, 0.5);
+  --c-focus: #5b9bff;
+
+  --c-success: #4ade80;
+  --c-success-bg: rgba(74, 222, 128, 0.14);
+  --c-warning: #fbbf24;
+  --c-warning-bg: rgba(251, 191, 36, 0.14);
+  --c-danger: #f87171;
+  --c-danger-bg: rgba(248, 113, 113, 0.14);
+
+  --c-footprint-fill: rgba(91, 155, 255, 0.18);
+  --c-footprint-line: rgba(91, 155, 255, 0.8);
+  --c-footprint-hover-fill: rgba(91, 155, 255, 0.35);
+  --c-selected-fill: rgba(74, 222, 128, 0.35);
+  --c-selected-line: #4ade80;
+  --c-bbox-fill: rgba(251, 191, 36, 0.14);
+  --c-bbox-line: #fbbf24;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md:
+    0 4px 6px -2px rgba(0, 0, 0, 0.35), 0 12px 16px -4px rgba(0, 0, 0, 0.45);
+  --shadow-lg:
+    0 8px 8px -4px rgba(0, 0, 0, 0.3), 0 20px 24px -4px rgba(0, 0, 0, 0.5);
 }

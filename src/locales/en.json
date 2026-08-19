@@ -7,7 +7,13 @@
   "nav": {
     "home": "Catalogs",
     "language": "Language",
+    "theme": "Appearance",
     "backToCatalogs": "Back to catalogs"
+  },
+  "theme": {
+    "light": "Light",
+    "dark": "Dark",
+    "system": "Match system"
   },
   "home": {
     "heading": "STAC catalogs",

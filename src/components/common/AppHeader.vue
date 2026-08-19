@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import { SUPPORTED_LOCALES, persistLocale, type Locale } from '@/i18n'
+import { THEMES, theme, setTheme } from '@/theme'
 
 const { t, locale } = useI18n()
 
@@ -30,6 +31,65 @@ function setLocale(next: Locale) {
     </RouterLink>
 
     <div class="spacer" />
+
+    <nav class="theme-switch" :aria-label="t('nav.theme')">
+      <button
+        v-for="option in THEMES"
+        :key="option"
+        type="button"
+        class="theme-btn"
+        :class="{ 'is-active': theme === option }"
+        :aria-current="theme === option ? 'true' : undefined"
+        :aria-label="t(`theme.${option}`)"
+        :title="t(`theme.${option}`)"
+        @click="setTheme(option)"
+      >
+        <svg
+          v-if="option === 'light'"
+          class="theme-icon"
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+        >
+          <circle cx="12" cy="12" r="4.5" />
+          <path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22" />
+        </svg>
+        <svg
+          v-else-if="option === 'dark'"
+          class="theme-icon"
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+        </svg>
+        <!-- "system": a half-filled disc, rather than a third glyph unrelated
+             to the other two — it reads as "either of the above". -->
+        <svg
+          v-else
+          class="theme-icon"
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+          stroke="currentColor"
+          stroke-width="2"
+          fill="none"
+        >
+          <circle cx="12" cy="12" r="8.5" />
+          <path
+            d="M12 3.5a8.5 8.5 0 0 1 0 17z"
+            fill="currentColor"
+            stroke="none"
+          />
+        </svg>
+      </button>
+    </nav>
 
     <nav class="locale-switch" :aria-label="t('nav.language')">
       <button
@@ -81,6 +141,42 @@ function setLocale(next: Locale) {
 
 .spacer {
   flex: 1 1 auto;
+}
+
+.theme-switch {
+  display: flex;
+  gap: 2px;
+  padding: 2px;
+  background: var(--c-surface-2);
+  border-radius: var(--r-full);
+}
+
+.theme-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  background: transparent;
+  color: var(--c-text-muted);
+  padding: var(--sp-1);
+  border-radius: var(--r-full);
+  cursor: pointer;
+  transition:
+    background var(--transition),
+    color var(--transition);
+}
+.theme-btn:hover {
+  color: var(--c-text);
+}
+.theme-btn.is-active {
+  background: var(--c-surface);
+  color: var(--c-accent);
+  box-shadow: var(--shadow-sm);
+}
+
+.theme-icon {
+  width: 1rem;
+  height: 1rem;
 }
 
 .locale-switch {
