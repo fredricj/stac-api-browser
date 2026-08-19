@@ -21,7 +21,6 @@ import { resolveCrs } from '@/utils/projections'
 import ActiveFilterChips from '@/components/search/ActiveFilterChips.vue'
 import BboxInput from '@/components/search/BboxInput.vue'
 import CollectionFilter from '@/components/search/CollectionFilter.vue'
-import CoordinateSearchBox from '@/components/search/CoordinateSearchBox.vue'
 import DateRangeFilter from '@/components/search/DateRangeFilter.vue'
 import QueryableFilters from '@/components/search/QueryableFilters.vue'
 
@@ -113,7 +112,15 @@ const resultSummary = computed(() => {
         @clear-all="store.clearFilters()"
       />
 
-      <CoordinateSearchBox :default-crs="nativeCrs" @locate="onLocate" />
+      <CollectionFilter
+          :collections="store.allCollections"
+          :selected="store.collections"
+          :loading="store.collectionsLoading"
+          :error="store.collectionsError"
+          :grouping="store.entry?.collectionGrouping"
+          @update:selected="store.setCollections($event)"
+          @retry="store.loadCollections()"
+      />
 
       <BboxInput
         :model-value="store.bbox"
@@ -123,16 +130,6 @@ const resultSummary = computed(() => {
       <DateRangeFilter
         :model-value="store.datetime"
         @update:model-value="store.setDatetime($event)"
-      />
-
-      <CollectionFilter
-        :collections="store.allCollections"
-        :selected="store.collections"
-        :loading="store.collectionsLoading"
-        :error="store.collectionsError"
-        :grouping="store.entry?.collectionGrouping"
-        @update:selected="store.setCollections($event)"
-        @retry="store.loadCollections()"
       />
 
       <QueryableFilters
