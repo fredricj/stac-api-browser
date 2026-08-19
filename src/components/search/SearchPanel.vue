@@ -51,12 +51,7 @@ watch(
   },
 )
 
-const needsConfirmation = computed(
-  () => store.isLargeArea && !largeAreaConfirmed.value,
-)
-
 function runSearch() {
-  if (needsConfirmation.value) return
   emit('search')
 }
 
@@ -164,23 +159,7 @@ const resultSummary = computed(() => {
       </div>
 
       <div class="actions">
-        <!-- The area guard. Item counts grow with the square of the box and
-             there is no total to warn afterwards, so this asks first. -->
-        <div v-if="needsConfirmation" class="guard" role="alert">
-          <p class="guard-text">
-            {{
-              t('search.guard.warning', {
-                area: n(Math.round(store.areaKm2)),
-              })
-            }}
-          </p>
-          <button type="button" class="btn btn--warn" @click="confirmAndSearch">
-            {{ t('search.guard.searchAnyway') }}
-          </button>
-        </div>
-
         <button
-          v-else
           type="button"
           class="btn btn--primary"
           :disabled="!store.canSearch"

@@ -70,23 +70,6 @@ describe('the search button stays reachable', () => {
     expect(cancel).toBeDefined()
     expect(foot.contains(cancel!.element)).toBe(true)
   })
-
-  it('pins the large-area guard, which replaces the button', () => {
-    // The guard takes the button's place, so it has to inherit its position.
-    const store = useSearchStore()
-    store.configure(BUILTIN_APIS[0])
-    store.setBbox([11, 55, 19, 60])
-
-    const wrapper = mountPanel()
-    const foot = wrapper.find('.panel-foot').element
-    const guard = wrapper.find('.guard')
-
-    expect(guard.exists()).toBe(true)
-    expect(foot.contains(guard.element)).toBe(true)
-    expect(wrapper.find('.panel-scroll').element.contains(guard.element)).toBe(
-      false,
-    )
-  })
 })
 
 describe('page size', () => {
