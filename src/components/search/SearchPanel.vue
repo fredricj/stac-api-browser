@@ -17,7 +17,6 @@ import {
   type PageLimit,
 } from '@/services/pageLimitPreference'
 import type { BBox2D } from '@/types/stac'
-import { resolveCrs } from '@/utils/projections'
 import ActiveFilterChips from '@/components/search/ActiveFilterChips.vue'
 import BboxInput from '@/components/search/BboxInput.vue'
 import CollectionFilter from '@/components/search/CollectionFilter.vue'
@@ -37,8 +36,6 @@ const emit = defineEmits<{
 const { t, n } = useI18n()
 const store = useSearchStore()
 
-const nativeCrs = computed(() => resolveCrs(store.entry?.defaultCrs))
-
 /**
  * Cleared whenever the box changes, so confirming one large area never
  * silently authorises the next one.
@@ -53,16 +50,6 @@ watch(
 
 function runSearch() {
   emit('search')
-}
-
-function confirmAndSearch() {
-  largeAreaConfirmed.value = true
-  emit('search')
-}
-
-function onLocate(bbox: BBox2D) {
-  store.setBbox(bbox)
-  emit('locate', bbox)
 }
 
 /** Chips remove one constraint; a queryable's chip resets just that field. */
