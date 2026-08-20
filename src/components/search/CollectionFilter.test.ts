@@ -133,7 +133,9 @@ describe('selection', () => {
 
     const emitted = wrapper.emitted('update:selected')?.at(-1)?.[0] as string[]
     expect(emitted.length).toBeGreaterThan(0)
-    expect(emitted.every((id) => id.includes('arvidsjaur'))).toBe(true)
+    // Matches now come from keywords as well as the id, so not every id need
+    // literally contain the term — but some still should.
+    expect(emitted.some((id) => id.includes('arvidsjaur'))).toBe(true)
   })
 
   it('bulk-selects only what is visible, not the whole catalog', async () => {

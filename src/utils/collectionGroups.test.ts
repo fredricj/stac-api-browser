@@ -23,7 +23,11 @@ const liveHojdCollections = (
 /** A collection with only the fields these helpers read. */
 function collection(
   id: string,
-  options: { title?: string; start?: string | null } = {},
+  options: {
+    title?: string
+    start?: string | null
+    keywords?: string[]
+  } = {},
 ): StacCollection {
   return {
     type: 'Collection',
@@ -32,6 +36,7 @@ function collection(
     title: options.title,
     description: '',
     license: 'CC-BY-4.0',
+    keywords: options.keywords,
     links: [],
     extent: {
       spatial: { bbox: [[11, 55, 24, 69]] },
@@ -193,16 +198,38 @@ describe('filterGroups', () => {
 
   it('matches on the place name parsed out of the id', () => {
     const result = filterGroups(groups, 'arvidsjaur')
-    const ids = result.flatMap((group) =>
-      group.options.map((option) => option.id),
+    const options = result.flatMap((group) => group.options)
+    expect(options.length).toBeGreaterThan(0)
+    expect(
+      options.every((option) => option.searchText.includes('arvidsjaur')),
+    ).toBe(true)
+    // At least one hit comes from the id itself, not only from keywords.
+    expect(options.some((option) => option.id.includes('arvidsjaur'))).toBe(
+      true,
     )
-    expect(ids.length).toBeGreaterThan(0)
-    expect(ids.every((id) => id.includes('arvidsjaur'))).toBe(true)
   })
 
   it('requires every term to match', () => {
     const result = filterGroups(groups, 'arvidsjaur 2024')
     expect(result.map((group) => group.key)).toEqual(['2024'])
+  })
+
+  it('matches on keywords, not just id, title and region', () => {
+    const withKeywords = groupCollectionsByYear([
+      collection('orto-a-2024', {
+        title: 'Alpha',
+        start: '2024-01-01T00:00:00Z',
+        keywords: ['infrared'],
+      }),
+      collection('orto-b-2024', {
+        title: 'Beta',
+        start: '2024-01-01T00:00:00Z',
+      }),
+    ])
+    const result = filterGroups(withKeywords, 'infrared')
+    expect(result.flatMap((group) => group.options.map((o) => o.id))).toEqual(
+      ['orto-a-2024'],
+    )
   })
 
   it('drops groups left empty rather than showing bare headings', () => {

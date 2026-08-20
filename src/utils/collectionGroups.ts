@@ -5,7 +5,8 @@
  * alphabetical list of those is unusable — nobody looks for imagery by the
  * first letter of a municipality. Almost every real question is "what covers
  * this place, and how recently", so the list groups by year, newest first,
- * and searches across id, title and the region parsed out of the id.
+ * and searches across id, title, keywords and the region parsed out of the
+ * id.
  *
  * `stac-hojd` is a different shape entirely: 78 collections that are really
  * just two *products* — one split into many identically-structured tiles,
@@ -24,7 +25,7 @@ export interface CollectionOption {
   year: number | null
   /** Region slug parsed from the id, folded into the search text. */
   region: string | null
-  /** Lowercased id + title + region, matched against the query. */
+  /** Lowercased id + title + region + keywords, matched against the query. */
   searchText: string
 }
 
@@ -81,7 +82,7 @@ export function toOption(collection: StacCollection): CollectionOption {
     title,
     year: collectionYear(collection),
     region,
-    searchText: [collection.id, title, region]
+    searchText: [collection.id, title, region, ...(collection.keywords ?? [])]
       .filter(Boolean)
       .join(' ')
       .toLowerCase(),
